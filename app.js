@@ -10,7 +10,7 @@ app.use(bodyParser.urlencoded({
 }))
 app.use(bodyParser.json())
 
-app.use('/get', (req, res) => {
+app.get('/get', (req, res) => {
   res.status(200).send({
     'cant': socket.getCantCustomer
   })
