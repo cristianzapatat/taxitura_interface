@@ -10,13 +10,13 @@ const bot = []
 
 net.createServer(socket => {
   console.log('#####--Customer Connected--######')
-  clients.push(socket)
-  console.log(clients.length)
   if (bot.length === 0) {
     socket.name = socket.remoteAddress + ':' + socket.remotePort
     bot.push(socket)
     console.log(bot.length)
   }
+  clients[socket.remoteAddress + ':' + socket.remotePort] = socket
+  console.log(Object.keys(clients).length)
   socket.write('{"mensaje":"conectado"}')
   socket.on('data', (data) => {
     takeDecision(data, socket)
@@ -85,6 +85,7 @@ function getCantCustomer () {
 
 console.log(`The server is listening on port ${config.portSocket}\n`)
 console.log(Object.keys(clients).length)
+console.log(net)
 
 module.exports = {
   getCantCustomer
