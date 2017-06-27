@@ -3,18 +3,30 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const app = express()
-const socket = require('./socket/main')
+const server = require('http').Server(app)
+const io = require('socket.io')(server)
+// const socket = require('./socket/main')
+const clients = []
 
 app.use(bodyParser.urlencoded({
   extended: false
 }))
 app.use(bodyParser.json())
 
-app.get('/get', (req, res) => {
-  console.log(socket.getCantCustomer())
-  res.status(200).send({
-    cant: socket.getCantCustomer()
+io.on('connection', socket => {
+  console.log('cliente conectado\n')
+  clients.push(socket)
+  socket.emit('message', {
+    id: 1,
+    text: 'algo'
   })
 })
 
-module.exports = app
+app.get('/get', (req, res) => {
+  console.log(clients.length)
+  res.status(200).send({
+    cant: clients.length
+  })
+})
+
+module.exports = server
