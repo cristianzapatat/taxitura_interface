@@ -16,6 +16,7 @@
   "author": "Yan Carlos",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.17.2",
     "express": "^4.15.2",
     "net": "^1.0.2",
     "socket.io": "^1.7.3"
