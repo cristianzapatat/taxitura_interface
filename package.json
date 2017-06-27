@@ -4,7 +4,7 @@
   "description": "servidor",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -19,8 +19,5 @@
     "express": "^4.15.2",
     "net": "^1.0.2",
     "socket.io": "^1.7.3"
-  },
-  "devDependencies": {
-    "nodemon": "^1.11.0"
   }
 }

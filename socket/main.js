@@ -11,6 +11,7 @@ const bot = []
 net.createServer(socket => {
   console.log('#####--Customer Connected--######')
   clients.push(socket)
+  console.log(clients.length)
   if (bot.length === 0) {
     socket.name = socket.remoteAddress + ':' + socket.remotePort
     bot.push(socket)
@@ -79,10 +80,11 @@ function sendMessage (message, customer) {
 }
 
 function getCantCustomer () {
-  return clients.length
+  return Object.keys(clients).length
 }
 
 console.log(`The server is listening on port ${config.portSocket}\n`)
+console.log(Object.keys(clients).length)
 
 module.exports = {
   getCantCustomer

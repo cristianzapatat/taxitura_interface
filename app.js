@@ -11,8 +11,9 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json())
 
 app.get('/get', (req, res) => {
+  console.log(socket.getCantCustomer())
   res.status(200).send({
-    'cant': socket.getCantCustomer
+    cant: socket.getCantCustomer()
   })
 })
 
