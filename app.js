@@ -15,10 +15,11 @@ app.use(bodyParser.json())
 
 io.on('connection', socket => {
   console.log('cliente conectado\n')
-  clients.push(socket)
+  clients.push(socket.handshake.address)
   socket.emit('message', {
-    id: 1,
-    text: 'algo'
+    cant_clients: clients.length,
+    id_socekt: socket.id,
+    remote_address: socket.handshake.address
   })
 })
 
