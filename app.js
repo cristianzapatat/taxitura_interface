@@ -21,6 +21,15 @@ io.on('connection', socket => {
     id_socekt: socket.id,
     remote_address: socket.handshake.address
   })
+
+  socket.on('taxitura', data => {
+    data['server'] = 'taxitura'
+    socket.emit('message', data)
+  })
+
+  socket.on('disconnect', () => {
+    clients.splice(0, 1)
+  })
 })
 
 app.get('/get', (req, res) => {
