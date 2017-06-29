@@ -24,6 +24,8 @@ io.on('connection', socket => {
 
   socket.on('taxitura', data => {
     data['server'] = 'taxitura'
+    console.log('\n')
+    console.log(data)
     socket.emit('message', data)
   })
 
