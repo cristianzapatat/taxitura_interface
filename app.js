@@ -31,8 +31,9 @@ io.on('connection', socket => {
   })
 
   socket.on('taxitura', data => {
-    data['server'] = 'taxitura'
-    socket.emit('message', data)
+    if (data.accion === 'pedido') {
+      io.emit('app', data)
+    }
   })
 
   socket.on('disconnect', () => {
