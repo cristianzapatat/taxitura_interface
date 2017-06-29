@@ -23,8 +23,9 @@ io.on('connection', socket => {
     remote_address: socket.handshake.address
   })
 
-  socket.on('_bot', data => {
+  socket.on('bot', data => {
     console.log('conexion de un bot')
+    console.log(data)
     delete clients[socket.handshake.address]
     bots[socket.handshake.address] = socket
   })
