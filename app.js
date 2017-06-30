@@ -25,7 +25,6 @@ io.on('connection', socket => {
 
   socket.on('bot', data => {
     console.log('conexion de un bot')
-    console.log(data)
     delete clients[socket.handshake.address]
     bots[socket.handshake.address] = socket
   })
@@ -33,6 +32,12 @@ io.on('connection', socket => {
   socket.on('taxitura', data => {
     if (data.accion === 'pedido') {
       io.emit('app', data)
+    }
+  })
+
+  socket.on('app', data => {
+    if (data) {
+      getBot().emit('order', data)
     }
   })
 
@@ -52,5 +57,11 @@ app.get('/get', (req, res) => {
     clients: Object.keys(clients).length
   })
 })
+
+function getBot () {
+  for (let index in bots) {
+    return bots[index]
+  }
+}
 
 module.exports = server
