@@ -37,7 +37,11 @@ io.on('connection', socket => {
 
   socket.on('app', data => {
     if (data) {
-      getBot().emit('order', data)
+      if (data.action === 'order') {
+        getBot().emit('order', data)
+      } else if (data.action === 'arrive') {
+        getBot().emit('arrive', data)
+      }
     }
   })
 
