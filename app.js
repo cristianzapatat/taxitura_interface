@@ -30,7 +30,7 @@ io.on('connection', socket => {
   })
 
   socket.on('taxitura', order => {
-    if (order.accion === 'order') {
+    if (order.action === 'order') {
       order['id'] = new Date().getTime()
       order['state'] = 0
       orders[order.id] = order
