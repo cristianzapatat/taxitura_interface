@@ -8,6 +8,7 @@ const io = require('socket.io')(server)
 
 const bots = {}
 const clients = {}
+const orders = {}
 
 app.use(bodyParser.urlencoded({
   extended: false
@@ -15,7 +16,7 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json())
 
 io.on('connection', socket => {
-  clients[socket.handshake.address] = socket
+  clients[socket.id] = socket
 
   socket.emit('message', {
     connection: true,
@@ -24,33 +25,51 @@ io.on('connection', socket => {
   })
 
   socket.on('bot', data => {
-    console.log('conexion de un bot')
-    delete clients[socket.handshake.address]
-    bots[socket.handshake.address] = socket
+    delete clients[socket.id]
+    bots[socket.id] = socket
   })
 
-  socket.on('taxitura', data => {
-    if (data.accion === 'pedido') {
-      io.emit('app', data)
+  socket.on('taxitura', order => {
+    if (order.accion === 'order') {
+      order['id'] = new Date().getTime()
+      order['state'] = 0
+      orders[order.id] = order
+      io.emit('app', order)
     }
   })
 
-  socket.on('app', data => {
-    if (data) {
-      if (data.action === 'order') {
-        getBot().emit('order', data)
-      } else if (data.action === 'arrive') {
-        getBot().emit('arrive', data)
+  socket.on('app', order => {
+    if (order) {
+      if (order.action === 'order') {
+        if (orders[order.id].state === 0) {
+          order.state = 1
+          orders[order.id] = order
+        }
+        getBot().emit('order', order)
+      } else if (order.action === 'arrive') {
+        // quien llega al cliente debe ser igual que el que acepto
+        if (orders[order.id].state === 1) {
+          order.state = 2
+          orders[order.id] = order
+        }
+        getBot().emit('arrive', order)
+      } else if (order.action === 'end') {
+        // quien finaliza servicio debe ser igual que los anteriores
+        if (orders[order.id].state === 2) {
+          order.state = 3
+          orders[order.id] = order
+        }
+        getBot().emit('end', order)
       }
     }
   })
 
   socket.on('disconnect', () => {
-    if (clients[socket.handshake.address]) {
-      delete clients[socket.handshake.address]
+    if (clients[socket.id]) {
+      delete clients[socket.id]
     }
-    if (bots[socket.handshake.address]) {
-      delete bots[socket.handshake.address]
+    if (bots[socket.id]) {
+      delete bots[socket.id]
     }
   })
 })
@@ -58,7 +77,9 @@ io.on('connection', socket => {
 app.get('/get', (req, res) => {
   res.status(200).send({
     bots: Object.keys(bots).length,
-    clients: Object.keys(clients).length
+    clients: Object.keys(clients).length,
+    cant_orders: Object.keys(orders).length,
+    orders: orders
   })
 })
 
