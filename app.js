@@ -45,23 +45,23 @@ io.on('connection', socket => {
           order.state = 1
           orders[order.id] = order
           // Cuando el taxista acepta el servicio,se le responde al mismo para que dibuje el servicio
+          getBot().emit('order', order)
           socket.on('accept', order)
         }
-        getBot().emit('order', order)
       } else if (order.action === 'arrive') {
         // quien llega al cliente debe ser igual que el que acepto
         if (orders[order.id].state === 1) {
           order.state = 2
           orders[order.id] = order
+          getBot().emit('arrive', order)
         }
-        getBot().emit('arrive', order)
       } else if (order.action === 'end') {
         // quien finaliza servicio debe ser igual que los anteriores
         if (orders[order.id].state === 2) {
           order.state = 3
           orders[order.id] = order
+          getBot().emit('end', order)
         }
-        getBot().emit('end', order)
       }
     }
   })
