@@ -44,6 +44,8 @@ io.on('connection', socket => {
         if (orders[order.id].state === 0) {
           order.state = 1
           orders[order.id] = order
+          // Cuando el taxista acepta el servicio,se le responde al mismo para que dibuje el servicio
+          socket.on('accept', order)
         }
         getBot().emit('order', order)
       } else if (order.action === 'arrive') {
