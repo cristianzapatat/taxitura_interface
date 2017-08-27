@@ -55,6 +55,7 @@ io.on('connection', socket => {
           order.state = 2
           orders[order.id] = order
           getBot().emit('arrive', order)
+          socket.emit('arrive', order)
         }
       } else if (order.action === 'end') {
         // quien finaliza servicio debe ser igual que los anteriores
