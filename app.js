@@ -6,9 +6,9 @@ const app = express()
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 
-const bots = {}
-const clients = {}
-const orders = {}
+let bots = {}
+let clients = {}
+let orders = {}
 
 app.use(bodyParser.urlencoded({
   extended: false
@@ -85,6 +85,10 @@ app.get('/get', (req, res) => {
     cant_orders: Object.keys(orders).length,
     orders: orders
   })
+})
+
+app.get('/delete', (req, res) => {
+  orders = {}
 })
 
 function getBot () {
