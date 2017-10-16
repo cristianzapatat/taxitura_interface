@@ -89,10 +89,7 @@ app.get('/get', (req, res) => {
 app.get('/delete', (req, res) => {
   orders = {}
   res.status(200).send({
-    bots: Object.keys(bots).length,
-    clients: Object.keys(clients).length,
-    cant_orders: Object.keys(orders).length,
-    orders: orders
+    status: 'ok'
   })
 })
 
