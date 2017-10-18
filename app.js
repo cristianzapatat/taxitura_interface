@@ -31,9 +31,11 @@ io.on('connection', socket => {
 
   socket.on('taxitura', order => {
     if (order.action === 'order') {
-      order['id'] = new Date().getTime()
-      order['state'] = 0
-      orders[order.id] = order
+      order['service'] = {
+        id: new Date().getTime(),
+        state: 0
+      }
+      orders[order.service.id] = order
       io.emit('app', order)
     }
   })
@@ -41,26 +43,23 @@ io.on('connection', socket => {
   socket.on('app', order => {
     if (order) {
       if (order.action === 'order') {
-        if (orders[order.id].state === 0) {
-          order.state = 1
-          orders[order.id] = order
-          // Cuando el taxista acepta el servicio,se le responde al mismo para que dibuje el servicio
+        if (orders[order.service.id].service.state === 0) {
+          order.service.state = 1
+          orders[order.service.id] = order
           getBot().emit('order', order)
           socket.emit('accept', order)
         }
       } else if (order.action === 'arrive') {
-        // quien llega al cliente debe ser igual que el que acepto
-        if (orders[order.id].state === 1) {
-          order.state = 2
-          orders[order.id] = order
+        if (orders[order.service.id].service.state === 1) {
+          order.service.state = 2
+          orders[order.service.id] = order
           getBot().emit('arrive', order)
           socket.emit('arrive', order)
         }
       } else if (order.action === 'end') {
-        // quien finaliza servicio debe ser igual que los anteriores
-        if (orders[order.id].state === 2) {
-          order.state = 3
-          orders[order.id] = order
+        if (orders[order.service.id].service.state === 2) {
+          order.service.state = 3
+          orders[order.service.id] = order
           getBot().emit('end', order)
         }
       }
