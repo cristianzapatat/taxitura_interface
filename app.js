@@ -72,7 +72,7 @@ io.on('connection', socket => {
     if (order) {
       if (order.user.id === quality.user.id) {
         if (!order.quality) {
-          orders[quality.servie.id]['quality'] = quality
+          orders[quality.service.id]['quality'] = quality
           message = 'Gracias por calificar el servicio'
         } else {
           message = 'El servicio ya recibio una calificación previa'
