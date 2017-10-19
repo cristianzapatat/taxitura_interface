@@ -66,6 +66,30 @@ io.on('connection', socket => {
     }
   })
 
+  socket.on('quality', quality => {
+    let order = orders[quality.servie.id]
+    let message = ''
+    if (order) {
+      if (order.user.id === quality.user.id) {
+        if (!order.quality) {
+          orders[quality.servie.id]['quality'] = quality
+          message = 'Gracias por calificar el servicio'
+        } else {
+          message = 'El servicio ya recibio una calificación previa'
+        }
+      } else {
+        message = 'El servicio que está calificando pertenece a otro usuario'
+      }
+    } else {
+      message = 'El servicio no está disponible para calificar'
+    }
+    let response = {
+      user: { id: quality.user.id },
+      message
+    }
+    socket.emit('quality', response)
+  })
+
   socket.on('disconnect', () => {
     if (clients[socket.id]) {
       delete clients[socket.id]
