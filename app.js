@@ -67,7 +67,7 @@ io.on('connection', socket => {
   })
 
   socket.on('quality', quality => {
-    let order = orders[quality.servie.id]
+    let order = orders[quality.service.id]
     let message = ''
     if (order) {
       if (order.user.id === quality.user.id) {
