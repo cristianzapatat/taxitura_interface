@@ -102,6 +102,7 @@ io.on('connection', socket => {
   })
 
   socket.on('getPositionBot', user => {
+    console.log(user)
     if (user) {
       let service = ordersInForce[user.id]
       if (service) {
@@ -118,6 +119,7 @@ io.on('connection', socket => {
   })
 
   socket.on('returnPositionApp', data => {
+    console.log(data)
     let service = ordersInForce[data.user.id]
     if (service) {
       let startLoc = `${data.position.latitude},${data.position.longitude}`
