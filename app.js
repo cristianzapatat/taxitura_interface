@@ -110,10 +110,10 @@ io.on('connection', socket => {
         if (sock) {
           sock.emit('getPositionApp', service)
         } else {
-          socket.emit('returnPositionBot', {status: false}) // Socket off
+          socket.emit('returnPositionBot', {status: false, user: service.user}) // Socket off
         }
       } else {
-        socket.emit('returnPositionBot', null)
+        socket.emit('returnPositionBot', {status: null, user: user})
       }
     }
   })
@@ -129,18 +129,18 @@ io.on('connection', socket => {
           return res.json()
         })
         .then(json => {
-          let response = {
+          getBot().emit('returnPositionBot', {
+            status: true,
             position_cabman: {
               distance: json,
               latitude: data.position.latitude,
               longitude: data.position.longitude
             },
             user: service.user
-          }
-          getBot().emit('returnPositionBot', {status: true, response})
+          })
         })
     } else {
-      getBot().emit('returnPositionBot', null)
+      getBot().emit('returnPositionBot', {status: null, user: data.user})
     }
   })
 
