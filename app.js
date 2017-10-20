@@ -2,13 +2,17 @@
 
 const express = require('express')
 const bodyParser = require('body-parser')
+const fetch = require('node-fetch')
 const app = express()
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 
+const consts = require('./constants/constants.js')
+
 let bots = {}
 let clients = {}
 let orders = {}
+let ordersInForce = {}
 
 app.use(bodyParser.urlencoded({
   extended: false
@@ -36,6 +40,7 @@ io.on('connection', socket => {
         state: 0
       }
       orders[order.service.id] = order
+      ordersInForce[order.user.id] = order
       io.emit('app', order)
     }
   })
@@ -45,7 +50,11 @@ io.on('connection', socket => {
       if (order.action === 'order') {
         if (orders[order.service.id].service.state === 0) {
           order.service.state = 1
+          order['chanel'] = {
+            socket: socket.id
+          }
           orders[order.service.id] = order
+          ordersInForce[order.user.id] = order
           getBot().emit('order', order)
           socket.emit('accept', order)
         }
@@ -53,6 +62,7 @@ io.on('connection', socket => {
         if (orders[order.service.id].service.state === 1) {
           order.service.state = 2
           orders[order.service.id] = order
+          ordersInForce[order.user.id] = order
           getBot().emit('arrive', order)
           socket.emit('arrive', order)
         }
@@ -60,6 +70,7 @@ io.on('connection', socket => {
         if (orders[order.service.id].service.state === 2) {
           order.service.state = 3
           orders[order.service.id] = order
+          delete ordersInForce[order.user.id]
           getBot().emit('end', order)
         }
       }
@@ -88,6 +99,47 @@ io.on('connection', socket => {
       message
     }
     socket.emit('quality', response)
+  })
+
+  socket.on('getPositionBot', user => {
+    if (user) {
+      let service = ordersInForce[user.id]
+      if (service) {
+        let sock = clients[service.chanel.socket]
+        if (sock) {
+          sock.emit('getPositionApp', service)
+        } else {
+          socket.emit('returnPositionBot', {status: false}) // Socket off
+        }
+      } else {
+        socket.emit('returnPositionBot', null)
+      }
+    }
+  })
+
+  socket.on('returnPositionApp', data => {
+    let service = ordersInForce[data.user.id]
+    if (service) {
+      let startLoc = `${data.position.latitude},${data.position.longitude}`
+      let endLoc = `${service.position_user.latitude},${service.position_user.longitude}`
+      fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${startLoc}&destinations=${endLoc}&key=${consts.apiDistanceAndTime}&units=metric`)
+        .then(res => {
+          return res.json()
+        })
+        .then(json => {
+          let response = {
+            position_cabman: {
+              distance: json,
+              latitude: data.position.latitude,
+              longitude: data.position.longitude
+            },
+            user: service.user
+          }
+          getBot().emit('returnPositionBot', {status: true, response})
+        })
+    } else {
+      getBot().emit('returnPositionBot', null)
+    }
   })
 
   socket.on('disconnect', () => {
