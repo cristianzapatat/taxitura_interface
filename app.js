@@ -112,7 +112,7 @@ app.get('/get', (req, res) => {
 app.get('/delete', (req, res) => {
   orders = {}
   res.status(200).send({
-    status: 'ok'
+    status: 'OK'
   })
 })
 
