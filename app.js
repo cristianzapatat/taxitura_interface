@@ -106,14 +106,18 @@ io.on('connection', socket => {
     if (user) {
       let service = ordersInForce[user.id]
       if (service) {
-        let sock = clients[service.chanel.socket]
-        if (sock) {
-          sock.emit('getPositionApp', service)
+        if (service.chanel) {
+          let sock = clients[service.chanel.socket]
+          if (sock) {
+            sock.emit('getPositionApp', service)
+          } else {
+            socket.emit('returnPositionBot', {status: false, sock: false, user: service.user}) // Socket off
+          }
         } else {
-          socket.emit('returnPositionBot', {status: false, user: service.user}) // Socket off
+          socket.emit('returnPositionBot', {status: false, sock: true, user: user})
         }
       } else {
-        socket.emit('returnPositionBot', {status: null, user: user})
+        socket.emit('returnPositionBot', {status: null, sock: false, user: user})
       }
     }
   })
@@ -140,7 +144,7 @@ io.on('connection', socket => {
           })
         })
     } else {
-      getBot().emit('returnPositionBot', {status: null, user: data.user})
+      getBot().emit('returnPositionBot', {status: null, sock: false, user: data.user})
     }
   })
 
