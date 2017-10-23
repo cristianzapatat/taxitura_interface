@@ -1,9 +1,18 @@
 'use strict'
 
 const express = require('express')
+const fs = require('fs')
+const path = require('path')
+const exphbs = require('express-handlebars')
 const bodyParser = require('body-parser')
 const fetch = require('node-fetch')
+
 const app = express()
+app.set('views', path.join(__dirname, 'views'))
+app.engine('.hbs', exphbs({extname: '.hbs'}))
+app.set('view engine', 'hbs')
+app.use(express.static(path.join(__dirname, 'public')))
+
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 
@@ -135,6 +144,7 @@ io.on('connection', socket => {
         .then(json => {
           getBot().emit('returnPositionBot', {
             status: true,
+            service: service,
             position_cabman: {
               distance: json,
               latitude: data.position.latitude,
@@ -174,10 +184,71 @@ app.get('/delete', (req, res) => {
   })
 })
 
+app.get('/position_cabman/:order/:user', (req, res) => {
+  let order = req.params.order
+  let user = req.params.user
+  if (order && user) {
+    let service = orders[order]
+    let serviceInForce = ordersInForce[user]
+    if (service && serviceInForce) {
+      let data = JSON.stringify({
+        user: {
+          id: serviceInForce.user.id,
+          lat: serviceInForce.position_user.latitude,
+          lng: serviceInForce.position_user.longitude
+        },
+        cabman: {
+          name: serviceInForce.cabman.name,
+          lat: serviceInForce.position_cabman.latitude,
+          lng: serviceInForce.position_cabman.longitude
+        },
+        service: {
+          id: order
+        }
+      })
+      res.render('positionCabman', {
+        data: data
+      })
+    } else {
+      redirectDefault(res)
+    }
+  } else {
+    redirectDefault(res)
+  }
+})
+
+app.get('/img/:img/png', (req, res) => {
+  let name = req.params.img
+  if (name) {
+    let root = `./img/${name}.png`
+    if (fs.existsSync(root)) {
+      var img = fs.readFileSync(root)
+      res.writeHead(200, { 'Content-Type': 'image/png' })
+      res.end(img, 'binary')
+    } else {
+      var image = fs.readFileSync(`./img/taxitura.png`)
+      res.writeHead(200, { 'Content-Type': 'image/png' })
+      res.end(image, 'binary')
+    }
+  } else {
+    var imgg = fs.readFileSync(`./img/taxitura.png`)
+    res.writeHead(200, { 'Content-Type': 'image/png' })
+    res.end(imgg, 'binary')
+  }
+})
+
+app.use((req, res, next) => {
+  redirectDefault(res)
+})
+
 function getBot () {
   for (let index in bots) {
     return bots[index]
   }
+}
+
+function redirectDefault (res) {
+  res.redirect('https://www.facebook.com/taxitura/')
 }
 
 module.exports = server

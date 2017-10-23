@@ -18,6 +18,8 @@
   "dependencies": {
     "body-parser": "^1.17.2",
     "express": "^4.15.2",
+    "express-handlebars": "^3.0.0",
+    "hbs": "~4.0.1",
     "node-fetch": "^1.7.3",
     "socket.io": "^1.7.3"
   }

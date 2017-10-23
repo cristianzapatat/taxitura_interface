@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Posición Taxista - Taxitura</title>
+    <style>
+      #map {
+        height: 100%;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div style="display:none;">
+      <input type="hidden" name="data_tt" id="data_tt" value="{{data}}">
+    </div>
+    <script>
+      /* global google:true */
+      var markerCabman
+      var markerUser
+      var data
+      function initMap () {
+        data = JSON.parce(document.getElementById('data_tt').value)
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 15,
+          center: {lat: data.cabman.lat, lng: data.cabman.lng}
+        })
+
+        markerCabman = new google.maps.Marker({
+          position: {lat: data.cabman.lat, lng: data.cabman.lng},
+          title: `Taxista ${data.cabman.name}`,
+          icon: 'http://taxitura-server.herokuapp.com/img/cab/png'
+        })
+        markerCabman.setMap(map)
+
+        markerUser = new google.maps.Marker({
+          position: {lat: data.user.lat, lng: data.user.lng},
+          title: 'Tú',
+          icon: 'http://taxitura-server.herokuapp.com/img/user/png'
+        })
+        markerUser.setMap(map)
+      }
+    </script>
+    <script
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS6qsRX4JbzHBGk4gcO2wD39btsBRvuqc&callback=initMap">
+    </script>
+  </body>
+</html>
