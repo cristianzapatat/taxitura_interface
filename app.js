@@ -111,7 +111,6 @@ io.on('connection', socket => {
   })
 
   socket.on('getPositionBot', user => {
-    console.log(user)
     if (user) {
       let service = ordersInForce[user.id]
       if (service) {
@@ -132,7 +131,6 @@ io.on('connection', socket => {
   })
 
   socket.on('returnPositionApp', data => {
-    console.log(data)
     let service = ordersInForce[data.user.id]
     if (service) {
       let startLoc = `${data.position.latitude},${data.position.longitude}`
@@ -144,7 +142,7 @@ io.on('connection', socket => {
         .then(json => {
           getBot().emit('returnPositionBot', {
             status: true,
-            service: service,
+            service: service.service,
             position_cabman: {
               distance: json,
               latitude: data.position.latitude,
