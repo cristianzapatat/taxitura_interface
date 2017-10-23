@@ -32,7 +32,7 @@
           jQuery.post(`http://taxitura-server.herokuapp.com/get_position_cab/${data.user.id}`, (data) => {
             console.log(data)
             if (data) {
-              markerCabman.setPosition({lat: data.latitude, lng: data.longitude})
+              markerCabman.setPosition({lat: data.positions.position_cabman.latitude, lng: data.positions.position_cabman.longitude})
             } else {
               clearInterval(idSet)
               window.top.close()

@@ -147,6 +147,12 @@ io.on('connection', socket => {
           return res.json()
         })
         .then(json => {
+          positionsCab[service.cabman.id] = {
+            position_cabman: {
+              latitude: data.position.latitude,
+              longitude: data.position.longitude
+            }
+          }
           getBot().emit('returnPositionBot', {
             status: true,
             service: service.service,
@@ -186,6 +192,8 @@ app.get('/get', (req, res) => {
 
 app.get('/delete', (req, res) => {
   orders = {}
+  ordersInForce = {}
+  positionsCab = {}
   res.status(200).send({
     status: 'OK'
   })
