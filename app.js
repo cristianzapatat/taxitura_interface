@@ -269,9 +269,10 @@ app.post('/get_position_cab/:user', (req, res) => {
     }
   }
   res.status(404).send({
-    position_cabman: null
+    positions: null
   })
 })
+
 app.use((req, res, next) => {
   redirectDefault(res)
 })

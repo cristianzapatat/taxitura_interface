@@ -3,7 +3,6 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <title>Posición Taxista - Taxitura</title>
     <style>
       #map {
@@ -14,58 +13,106 @@
         margin: 0;
         padding: 0;
       }
+      img {
+        cursor: pointer;
+      }
+      .header {
+        display: -webkit-flex;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: end;
+        font-size: 20px;
+        background: rgba(243, 184, 73, 0.14) !important;
+        width: 100%;
+        height: 50px;
+        border-style: solid;
+        border-bottom-width: 1px;
+        border-bottom-color: #ffaf18;
+      }
+      .logo {
+        display: -webkit-flex;
+        display: flex;
+        align-items: center;
+        background: #ffaf18;
+        width: 50px;
+        height: 100%;
+      }
+      .title {
+        margin-left: 5px;
+      }
     </style>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
   </head>
+
   <body>
-    <div id="map"></div>
-    <div style="display:none;">
-      <input type="hidden" name="data_tt" id="data_tt" value="{{data}}">
+    <div id="header" class="header">
+      <div id="logo" class="logo">
+        <a href="https://www.facebook.com/taxitura/">
+          <img src="http://taxitura-server.herokuapp.com/img/logo/png" height="48" width="48">
+        </a>
+      </div>
+      <div id="title" class="title">
+        <label>Taxitura - Posición Taxi</label>
+      </div>
+      <div style="display:none;">
+        <input type="hidden" name="data_tt" id="data_tt" value="{{data}}">
+      </div>
     </div>
-    <script>
-      /* global google:true */
-      var markerCabman
-      var markerUser
-      var data
-      var idSet
-      function updatePosition () {
-        idSet = setInterval(() => {
-          jQuery.post(`http://taxitura-server.herokuapp.com/get_position_cab/${data.user.id}`, (data) => {
-            console.log(data)
-            if (data) {
-              markerCabman.setPosition({lat: data.positions.position_cabman.latitude, lng: data.positions.position_cabman.longitude})
+    <div id="map"></div>
+  </body>
+
+  <script language="JavaScript">
+    /* global google, jQuery:true */
+    let urlBase = 'http://taxitura-server.herokuapp.com'
+    var markerCabman
+    var markerUser
+    var data
+    var idSet
+    function updatePosition () {
+      idSet = setInterval(() => {
+        jQuery.post(`${urlBase}/get_position_cab/${data.user.id}`, (data) => {
+          if (data) {
+            if (data.positions) {
+              markerCabman.setPosition({
+                lat: data.positions.position_cabman.latitude,
+                lng: data.positions.position_cabman.longitude
+              })
             } else {
               clearInterval(idSet)
               window.top.close()
             }
-          })
-        }, 8000)
-      }
-
-      function initMap () {
-        data = JSON.parse(document.getElementById('data_tt').value)
-        var map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 15,
-          center: {lat: data.cabman.lat, lng: data.cabman.lng}
+          } else {
+            clearInterval(idSet)
+            window.top.close()
+          }
         })
+      }, 8000)
+    }
 
-        markerCabman = new google.maps.Marker({
-          position: {lat: data.cabman.lat, lng: data.cabman.lng},
-          title: `Taxista ${data.cabman.name}`,
-          icon: 'http://taxitura-server.herokuapp.com/img/cab/png'
-        })
-        markerCabman.setMap(map)
+    function initMap () {
+      data = JSON.parse(document.getElementById('data_tt').value)
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 14,
+        center: {lat: data.cabman.lat, lng: data.cabman.lng}
+      })
 
-        markerUser = new google.maps.Marker({
-          position: {lat: data.user.lat, lng: data.user.lng},
-          title: 'Tú',
-          icon: 'http://taxitura-server.herokuapp.com/img/user/png'
-        })
-        markerUser.setMap(map)
-        updatePosition()
-      }
-    </script>
-    <script
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS6qsRX4JbzHBGk4gcO2wD39btsBRvuqc&callback=initMap">
-    </script>
-  </body>
+      markerCabman = new google.maps.Marker({
+        position: {lat: data.cabman.lat, lng: data.cabman.lng},
+        title: `Taxista ${data.cabman.name}`,
+        icon: `${urlBase}/img/cab/png`
+      })
+      markerCabman.setMap(map)
+      markerUser = new google.maps.Marker({
+        position: {lat: data.user.lat, lng: data.user.lng},
+        title: 'Tú',
+        label: 'Tú',
+        icon: `${urlBase}/img/user/png`
+      })
+      markerUser.setMap(map)
+      updatePosition()
+    }
+  </script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS6qsRX4JbzHBGk4gcO2wD39btsBRvuqc&callback=initMap"></script>
+
 </html>
