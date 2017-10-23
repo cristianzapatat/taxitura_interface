@@ -3,6 +3,7 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <title>Posición Taxista - Taxitura</title>
     <style>
       #map {
@@ -25,6 +26,21 @@
       var markerCabman
       var markerUser
       var data
+      var idSet
+      function updatePosition () {
+        idSet = setInterval(() => {
+          jQuery.post(`http://taxitura-server.herokuapp.com/get_position_cab/${data.user.id}`, (data) => {
+            console.log(data)
+            if (data) {
+              markerCabman.setPosition({lat: data.latitude, lng: data.longitude})
+            } else {
+              clearInterval(idSet)
+              window.top.close()
+            }
+          })
+        }, 8000)
+      }
+
       function initMap () {
         data = JSON.parse(document.getElementById('data_tt').value)
         var map = new google.maps.Map(document.getElementById('map'), {
@@ -45,6 +61,7 @@
           icon: 'http://taxitura-server.herokuapp.com/img/user/png'
         })
         markerUser.setMap(map)
+        updatePosition()
       }
     </script>
     <script

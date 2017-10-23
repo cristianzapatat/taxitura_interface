@@ -11,7 +11,6 @@ const app = express()
 app.set('views', path.join(__dirname, 'views'))
 app.engine('.hbs', exphbs({extname: '.hbs'}))
 app.set('view engine', 'hbs')
-app.use(express.static(path.join(__dirname, 'public')))
 
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
@@ -20,6 +19,7 @@ const consts = require('./constants/constants.js')
 
 let bots = {}
 let clients = {}
+let positionsCab = {}
 let orders = {}
 let ordersInForce = {}
 
@@ -40,6 +40,12 @@ io.on('connection', socket => {
   socket.on('bot', data => {
     delete clients[socket.id]
     bots[socket.id] = socket
+  })
+
+  socket.on('savePositionCab', data => {
+    positionsCab[data.cabman.id] = {
+      position_cabman: data.position_cabman
+    }
   })
 
   socket.on('taxitura', order => {
@@ -80,6 +86,7 @@ io.on('connection', socket => {
           order.service.state = 3
           orders[order.service.id] = order
           delete ordersInForce[order.user.id]
+          delete positionsCab[order.cabman.id]
           getBot().emit('end', order)
         }
       }
@@ -171,7 +178,9 @@ app.get('/get', (req, res) => {
     bots: Object.keys(bots).length,
     clients: Object.keys(clients).length,
     cant_orders: Object.keys(orders).length,
-    orders: orders
+    orders: orders,
+    ordersInForce: ordersInForce,
+    positionsCab: positionsCab
   })
 })
 
@@ -235,6 +244,26 @@ app.get('/img/:img/png', (req, res) => {
   }
 })
 
+app.post('/get_position_cab/:user', (req, res) => {
+  let user = req.params.user
+  if (user) {
+    let service = ordersInForce[user]
+    if (service) {
+      let idCabman = service.cabman.id
+      if (idCabman) {
+        let positions = positionsCab[idCabman]
+        if (positions) {
+          res.status(200).send({
+            positions
+          })
+        }
+      }
+    }
+  }
+  res.status(404).send({
+    position_cabman: null
+  })
+})
 app.use((req, res, next) => {
   redirectDefault(res)
 })
