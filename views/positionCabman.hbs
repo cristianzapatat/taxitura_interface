@@ -41,6 +41,46 @@
       .title {
         margin-left: 5px;
       }
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1;
+        padding-top: 100px;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0,0,0);
+        background-color: rgba(0,0,0,0.4);
+      }
+      .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        border: 1px solid #888;
+        width: 80%;
+        font-size: 20px;
+        font-weight: bold;
+        display: -webkit-flex;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 12px 12px 10px 10px;
+      }
+      .icon {
+        width: 100%;
+        height: 50px;
+        display: -webkit-flex;
+        display: flex;
+        background: #ffaf18;
+        justify-content: center;
+        align-items: center;
+        border-radius: 10px 10px 0px 0px;
+      }
+      .icon img {
+        cursor: default;
+      }
     </style>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
   </head>
@@ -60,6 +100,14 @@
       </div>
     </div>
     <div id="map"></div>
+    <div id="myModal" class="modal">
+      <div class="modal-content">
+        <div class="icon">
+          <img src="http://taxitura-server.herokuapp.com/img/logo/png" height="45" width="45">
+        </div>
+        <p>El servicio ha finalizado...</p>
+      </div>
+    </div>
   </body>
 
   <script language="JavaScript">
@@ -69,48 +117,70 @@
     var markerUser
     var data
     var idSet
+    let countNulls = 0
+    var modal = document.getElementById('myModal')
     function updatePosition () {
       idSet = setInterval(() => {
         jQuery.post(`${urlBase}/get_position_cab/${data.user.id}`, (data) => {
           if (data) {
-            if (data.positions) {
-              markerCabman.setPosition({
-                lat: data.positions.position_cabman.latitude,
-                lng: data.positions.position_cabman.longitude
-              })
+            if (data.status) {
+              if (data.positions) {
+                markerCabman.setPosition({
+                  lat: data.positions.position_cabman.latitude,
+                  lng: data.positions.position_cabman.longitude
+                })
+              } else {
+                countNulls += 1
+                if (countNulls === 3) {
+                  clearTime()
+                }
+              }
             } else {
-              clearInterval(idSet)
-              window.top.close()
+              clearTime()
+              markerUser.setMap(null)
+              markerCabman.setPosition({
+                lat: 3.8863253,
+                lng: -77.0498246
+              })
+              markerCabman.setIcon(`${urlBase}/img/taxitura/png`)
+              modal.style.display = 'block'
             }
           } else {
-            clearInterval(idSet)
-            window.top.close()
+            clearTime()
           }
         })
       }, 8000)
+    }
+
+    function clearTime () {
+      clearInterval(idSet)
+      countNulls = 0
     }
 
     function initMap () {
       data = JSON.parse(document.getElementById('data_tt').value)
       var map = new google.maps.Map(document.getElementById('map'), {
         zoom: 14,
-        center: {lat: data.cabman.lat, lng: data.cabman.lng}
+        center: (data.cabman) ? {lat: data.cabman.lat, lng: data.cabman.lng} : {lat: 3.8863253, lng: -77.0498256}
       })
 
       markerCabman = new google.maps.Marker({
-        position: {lat: data.cabman.lat, lng: data.cabman.lng},
-        title: `Taxista ${data.cabman.name}`,
-        icon: `${urlBase}/img/cab/png`
+        position: (data.cabman) ? {lat: data.cabman.lat, lng: data.cabman.lng} : {lat: 3.8863253, lng: -77.0498256},
+        title: (data.cabman) ? `Taxista ${data.cabman.name}` : `Taxitura`,
+        icon: (data.cabman) ? `${urlBase}/img/cab/png` : `${urlBase}/img/taxitura/png`
       })
       markerCabman.setMap(map)
-      markerUser = new google.maps.Marker({
-        position: {lat: data.user.lat, lng: data.user.lng},
-        title: 'Tú',
-        label: 'Tú',
-        icon: `${urlBase}/img/user/png`
-      })
-      markerUser.setMap(map)
-      updatePosition()
+      if (data.user) {
+        markerUser = new google.maps.Marker({
+          position: {lat: data.user.lat, lng: data.user.lng},
+          title: 'Tú',
+          icon: `${urlBase}/img/user/png`
+        })
+        markerUser.setMap(map)
+        updatePosition()
+      } else {
+        modal.style.display = 'block'
+      }
     }
   </script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAS6qsRX4JbzHBGk4gcO2wD39btsBRvuqc&callback=initMap"></script>

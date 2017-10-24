@@ -207,6 +207,7 @@ app.get('/position_cabman/:order/:user', (req, res) => {
     let serviceInForce = ordersInForce[user]
     if (service && serviceInForce) {
       let data = JSON.stringify({
+        status: true,
         user: {
           id: serviceInForce.user.id,
           lat: serviceInForce.position_user.latitude,
@@ -225,7 +226,19 @@ app.get('/position_cabman/:order/:user', (req, res) => {
         data: data
       })
     } else {
-      redirectDefault(res)
+      if (service) {
+        let data = JSON.stringify({
+          status: false,
+          user: null,
+          cabman: null,
+          service: { id: order }
+        })
+        res.render('positionCabman', {
+          data
+        })
+      } else {
+        redirectDefault(res)
+      }
     }
   } else {
     redirectDefault(res)
@@ -262,13 +275,30 @@ app.post('/get_position_cab/:user', (req, res) => {
         let positions = positionsCab[idCabman]
         if (positions) {
           res.status(200).send({
+            status: true,
             positions
           })
+        } else {
+          res.status(200).send({
+            status: true,
+            positions: null
+          })
         }
+      } else {
+        res.status(200).send({
+          status: true,
+          positions: null
+        })
       }
+    } else { // Service end
+      res.status(200).send({
+        status: false,
+        positions: null
+      })
     }
   }
   res.status(404).send({
+    status: null,
     positions: null
   })
 })
