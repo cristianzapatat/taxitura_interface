@@ -72,6 +72,8 @@ io.on('connection', socket => {
           ordersInForce[order.user.id] = order
           getBot().emit('order', order)
           socket.emit('accept', order)
+        } else {
+          socket.emit('accept', null)
         }
       } else if (order.action === 'arrive') {
         if (orders[order.service.id].service.state === 1) {
@@ -206,25 +208,37 @@ app.get('/position_cabman/:order/:user', (req, res) => {
     let service = orders[order]
     let serviceInForce = ordersInForce[user]
     if (service && serviceInForce) {
-      let data = JSON.stringify({
-        status: true,
-        user: {
-          id: serviceInForce.user.id,
-          lat: serviceInForce.position_user.latitude,
-          lng: serviceInForce.position_user.longitude
-        },
-        cabman: {
-          name: serviceInForce.cabman.name,
-          lat: serviceInForce.position_cabman.latitude,
-          lng: serviceInForce.position_cabman.longitude
-        },
-        service: {
-          id: order
-        }
-      })
-      res.render('positionCabman', {
-        data: data
-      })
+      if (service.service.id === serviceInForce.service.id) {
+        let data = JSON.stringify({
+          status: true,
+          user: {
+            id: serviceInForce.user.id,
+            lat: serviceInForce.position_user.latitude,
+            lng: serviceInForce.position_user.longitude
+          },
+          cabman: {
+            name: serviceInForce.cabman.name,
+            lat: serviceInForce.position_cabman.latitude,
+            lng: serviceInForce.position_cabman.longitude
+          },
+          service: {
+            id: order
+          }
+        })
+        res.render('positionCabman', {
+          data: data
+        })
+      } else {
+        let data = JSON.stringify({
+          status: false,
+          user: null,
+          cabman: null,
+          service: { id: order }
+        })
+        res.render('positionCabman', {
+          data
+        })
+      }
     } else {
       if (service) {
         let data = JSON.stringify({
