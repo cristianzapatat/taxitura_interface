@@ -22,6 +22,7 @@ let clients = {}
 let positionsCab = {}
 let orders = {}
 let ordersInForce = {}
+let ordersCanceled = {}
 
 app.use(bodyParser.urlencoded({
   extended: false
@@ -72,6 +73,15 @@ io.on('connection', socket => {
           ordersInForce[order.user.id] = order
           getBot().emit('order', order)
           socket.emit('accept', order)
+
+          deleteServiceForAccept(order)
+          let service = {
+            service: order.service,
+            user: order.user,
+            position_user: order.position_user,
+            action: 'order'
+          }
+          io.emit('deleteService', service)
         } else {
           socket.emit('accept', null)
         }
@@ -93,6 +103,13 @@ io.on('connection', socket => {
         }
       }
     }
+  })
+
+  socket.on('addServiceCanceled', order => {
+    if (!ordersCanceled[order.cabman.id]) {
+      ordersCanceled[order.cabman.id] = {}
+    }
+    ordersCanceled[order.cabman.id][order.service.id] = order.service
   })
 
   socket.on('quality', quality => {
@@ -188,6 +205,7 @@ app.get('/get', (req, res) => {
     cant_orders: Object.keys(orders).length,
     orders: orders,
     ordersInForce: ordersInForce,
+    ordersCanceled,
     positionsCab: positionsCab
   })
 })
@@ -196,6 +214,7 @@ app.get('/delete', (req, res) => {
   orders = {}
   ordersInForce = {}
   positionsCab = {}
+  ordersCanceled = {}
   res.status(200).send({
     status: 'OK'
   })
@@ -329,6 +348,12 @@ function getBot () {
 
 function redirectDefault (res) {
   res.redirect('https://www.facebook.com/taxitura/')
+}
+
+function deleteServiceForAccept (service) {
+  for (let index in ordersCanceled) {
+    delete ordersCanceled[index][service.id]
+  }
 }
 
 module.exports = server
