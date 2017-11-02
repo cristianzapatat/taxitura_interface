@@ -109,7 +109,21 @@ io.on('connection', socket => {
     if (!ordersCanceled[order.cabman.id]) {
       ordersCanceled[order.cabman.id] = {}
     }
-    ordersCanceled[order.cabman.id][order.service.id] = order.service
+    ordersCanceled[order.cabman.id][order.service.id] = order
+  })
+
+  socket.on('getServicesCanceled', id => {
+    let list = []
+    let servicesCanceled = ordersCanceled[id]
+    if (servicesCanceled) {
+      let cant = Object.keys(servicesCanceled).length
+      if (cant > 0) {
+        for (let index in servicesCanceled) {
+          list.push(servicesCanceled[index])
+        }
+      }
+    }
+    socket.emit('catchServicesCanceled', list)
   })
 
   socket.on('quality', quality => {
