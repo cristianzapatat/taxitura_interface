@@ -365,8 +365,12 @@ function redirectDefault (res) {
 }
 
 function deleteServiceForAccept (service) {
+  console.log(ordersCanceled)
   for (let index in ordersCanceled) {
-    delete ordersCanceled[index][service.id]
+    console.log(index + ' index')
+    console.log(service.id + ' id')
+    console.log('------------------------------------')
+    delete ordersCanceled[`${index}`][`${service.id}`]
   }
 }
 
