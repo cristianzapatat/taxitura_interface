@@ -368,9 +368,9 @@ function deleteServiceForAccept (service) {
   console.log(ordersCanceled)
   for (let index in ordersCanceled) {
     console.log(index + ' index')
-    console.log(service.id + ' id')
+    console.log(service.service.id + ' id')
     console.log('------------------------------------')
-    delete ordersCanceled[`${index}`][`${service.id}`]
+    delete ordersCanceled[`${index}`][`${service.service.id}`]
   }
 }
 
