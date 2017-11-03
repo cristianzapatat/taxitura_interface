@@ -312,6 +312,22 @@ app.get('/img/:img/png', (req, res) => {
   }
 })
 
+app.get('/get_services_canceled/:id', (req, res) => {
+  let list = []
+  if (req.params.id) {
+    let servicesCanceled = ordersCanceled[req.params.id]
+    if (servicesCanceled) {
+      let cant = Object.keys(servicesCanceled).length
+      if (cant > 0) {
+        for (let index in servicesCanceled) {
+          list.push(servicesCanceled[index])
+        }
+      }
+    }
+  }
+  res.status(200).send(list)
+})
+
 app.post('/get_position_cab/:user', (req, res) => {
   let user = req.params.user
   if (user) {
