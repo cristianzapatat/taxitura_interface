@@ -105,25 +105,50 @@ io.on('connection', socket => {
     }
   })
 
+  socket.on('acceptCancel', order => {
+    if (order.action === 'order') {
+      if (orders[order.service.id].service.state === 0) {
+        order.service.state = 1
+        order['chanel'] = {
+          socket: socket.id
+        }
+        orders[order.service.id] = order
+        ordersInForce[order.user.id] = order
+        let startLoc = `${order.position_cabman.latitude},${order.position_cabman.longitude}`
+        let endLoc = `${order.position_user.latitude},${order.position_user.longitude}`
+        fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${startLoc}&destinations=${endLoc}&key=${consts.apiDistanceAndTime}&units=metric`)
+          .then(response => {
+            return response.json()
+          })
+          .then(json => {
+            order.position_cabman.distance = json.rows[0].elements[0].distance.value
+            order.position_cabman.time = json.rows[0].elements[0].duration.value
+            orders[order.service.id] = order
+            ordersInForce[order.user.id] = order
+            getBot().emit('order', order)
+            socket.emit('orderCanceled', order)
+          })
+        deleteServiceForAccept(order)
+        let service = {
+          service: order.service,
+          user: order.user,
+          position_user: order.position_user,
+          action: 'order'
+        }
+        io.emit('deleteService', service)
+      } else {
+        socket.emit('accept', null)
+      }
+    } else {
+      socket.emit('accept', null)
+    }
+  })
+
   socket.on('addServiceCanceled', order => {
     if (!ordersCanceled[order.cabman.id]) {
       ordersCanceled[order.cabman.id] = {}
     }
     ordersCanceled[order.cabman.id][order.service.id] = order
-  })
-
-  socket.on('getServicesCanceled', id => {
-    let list = []
-    let servicesCanceled = ordersCanceled[id]
-    if (servicesCanceled) {
-      let cant = Object.keys(servicesCanceled).length
-      if (cant > 0) {
-        for (let index in servicesCanceled) {
-          list.push(servicesCanceled[index])
-        }
-      }
-    }
-    socket.emit('catchServicesCanceled', list)
   })
 
   socket.on('quality', quality => {
@@ -217,6 +242,7 @@ app.get('/get', (req, res) => {
     bots: Object.keys(bots).length,
     clients: Object.keys(clients).length,
     cant_orders: Object.keys(orders).length,
+    cant_ordersInForce: Object.keys(ordersInForce).length,
     orders: orders,
     ordersInForce: ordersInForce,
     ordersCanceled,
