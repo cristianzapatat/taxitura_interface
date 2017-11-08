@@ -17,12 +17,14 @@ const io = require('socket.io')(server)
 
 const consts = require('./constants/constants.js')
 
-let bots = {}
-let clients = {}
-let positionsCab = {}
-let orders = {}
-let ordersInForce = {}
-let ordersCanceled = {}
+let bots = {} // Lista de bot de Facebook
+let clients = {} // Lista de los taxista
+let positionsCab = {} // Posicion del taxista cuando esta en servicio
+let orders = {} // Lista de servicios que llegan desde Facebook
+let finishedOrders = {} // Lista de servicios terminados
+let ordersInForce = {} // Lista de servicios en proceso
+let pendingOrders = {} // Lista de los servicios pendientes por taxista
+let canceledOrders = {} // Lista de los servicios cancelados por taxista
 
 app.use(bodyParser.urlencoded({
   extended: false
@@ -64,24 +66,21 @@ io.on('connection', socket => {
   socket.on('app', order => {
     if (order) {
       if (order.action === 'order') {
-        if (orders[order.service.id].service.state === 0) {
-          order.service.state = 1
-          order['chanel'] = {
-            socket: socket.id
-          }
-          orders[order.service.id] = order
-          ordersInForce[order.user.id] = order
-          getBot().emit('order', order)
-          socket.emit('accept', order)
+        if (orders[order.service.id]) {
+          if (orders[order.service.id].service.state === 0) {
+            order.service.state = 1
+            order['chanel'] = {
+              socket: socket.id
+            }
+            orders[order.service.id] = order
+            ordersInForce[order.user.id] = order
+            getBot().emit('order', order)
+            socket.emit('accept', order)
 
-          deleteServiceForAccept(order)
-          let service = {
-            service: order.service,
-            user: order.user,
-            position_user: order.position_user,
-            action: 'order'
+            deleteServiceForAccept(order.service.id)
+          } else {
+            socket.emit('accept', null)
           }
-          io.emit('deleteService', service)
         } else {
           socket.emit('accept', null)
         }
@@ -96,7 +95,8 @@ io.on('connection', socket => {
       } else if (order.action === 'end') {
         if (orders[order.service.id].service.state === 2) {
           order.service.state = 3
-          orders[order.service.id] = order
+          finishedOrders[order.service.id] = order
+          delete orders[order.service.id]
           delete ordersInForce[order.user.id]
           delete positionsCab[order.cabman.id]
           getBot().emit('end', order)
@@ -128,14 +128,7 @@ io.on('connection', socket => {
             getBot().emit('order', order)
             socket.emit('orderCanceled', order)
           })
-        deleteServiceForAccept(order)
-        let service = {
-          service: order.service,
-          user: order.user,
-          position_user: order.position_user,
-          action: 'order'
-        }
-        io.emit('deleteService', service)
+        deleteServiceForAccept(order.service.id)
       } else {
         socket.emit('accept', null)
       }
@@ -144,15 +137,36 @@ io.on('connection', socket => {
     }
   })
 
-  socket.on('addServiceCanceled', order => {
-    if (!ordersCanceled[order.cabman.id]) {
-      ordersCanceled[order.cabman.id] = {}
+  socket.on('nextService', idCabman => {
+    if (pendingOrders[idCabman]) {
+      let service = null
+      for (let index in pendingOrders[idCabman]) {
+        service = pendingOrders[idCabman][index]
+        delete pendingOrders[idCabman][index]
+        break
+      }
+      if (service) {
+        socket.emit('app', service)
+      }
     }
-    ordersCanceled[order.cabman.id][order.service.id] = order
+  })
+
+  socket.on('addServiceList', order => {
+    if (!pendingOrders[order.cabman.id]) {
+      pendingOrders[order.cabman.id] = {}
+    }
+    pendingOrders[order.cabman.id][order.service.id] = order
+  })
+
+  socket.on('addServiceCanceled', order => {
+    if (!canceledOrders[order.cabman.id]) {
+      canceledOrders[order.cabman.id] = {}
+    }
+    canceledOrders[order.cabman.id][order.service.id] = order
   })
 
   socket.on('quality', quality => {
-    let order = orders[quality.service.id]
+    let order = finishedOrders[quality.service.id]
     let message = ''
     if (order) {
       if (order.user.id === quality.user.id) {
@@ -237,24 +251,31 @@ io.on('connection', socket => {
   })
 })
 
-app.get('/get', (req, res) => {
+app.get('/gt', (req, res) => {
   res.status(200).send({
     bots: Object.keys(bots).length,
     clients: Object.keys(clients).length,
-    cant_orders: Object.keys(orders).length,
-    cant_ordersInForce: Object.keys(ordersInForce).length,
-    orders: orders,
-    ordersInForce: ordersInForce,
-    ordersCanceled,
-    positionsCab: positionsCab
+    cant: {
+      orders: Object.keys(orders).length,
+      ordersInForce: Object.keys(ordersInForce).length,
+      finishedOrders: Object.keys(finishedOrders).length
+    },
+    positionsCab,
+    orders,
+    ordersInForce,
+    finishedOrders,
+    pendingOrders,
+    canceledOrders
   })
 })
 
-app.get('/delete', (req, res) => {
-  orders = {}
-  ordersInForce = {}
+app.get('/dlt', (req, res) => {
   positionsCab = {}
-  ordersCanceled = {}
+  orders = {}
+  finishedOrders = {}
+  ordersInForce = {}
+  pendingOrders = {}
+  canceledOrders = {}
   res.status(200).send({
     status: 'OK'
   })
@@ -341,7 +362,7 @@ app.get('/img/:img/png', (req, res) => {
 app.get('/get_services_canceled/:id', (req, res) => {
   let list = []
   if (req.params.id) {
-    let servicesCanceled = ordersCanceled[req.params.id]
+    let servicesCanceled = canceledOrders[req.params.id]
     if (servicesCanceled) {
       let cant = Object.keys(servicesCanceled).length
       if (cant > 0) {
@@ -407,12 +428,11 @@ function redirectDefault (res) {
 }
 
 function deleteServiceForAccept (service) {
-  console.log(ordersCanceled)
-  for (let index in ordersCanceled) {
-    console.log(index + ' index')
-    console.log(service.service.id + ' id')
-    console.log('------------------------------------')
-    delete ordersCanceled[`${index}`][`${service.service.id}`]
+  for (let index in canceledOrders) {
+    delete canceledOrders[index][service.service.id]
+  }
+  for (let index in pendingOrders) {
+    delete pendingOrders[index][service.service.id]
   }
 }
 
