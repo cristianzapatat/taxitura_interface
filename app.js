@@ -427,12 +427,12 @@ function redirectDefault (res) {
   res.redirect('https://www.facebook.com/taxitura/')
 }
 
-function deleteServiceForAccept (service) {
+function deleteServiceForAccept (idService) {
   for (let index in canceledOrders) {
-    delete canceledOrders[index][service.service.id]
+    delete canceledOrders[index][idService]
   }
   for (let index in pendingOrders) {
-    delete pendingOrders[index][service.service.id]
+    delete pendingOrders[index][idService]
   }
 }
 
