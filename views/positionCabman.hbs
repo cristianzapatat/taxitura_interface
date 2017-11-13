@@ -123,13 +123,13 @@
     jQuery('#icon').attr('src', `${urlBase}/img/logo/png`)
     function updatePosition () {
       idSet = setInterval(() => {
-        jQuery.post(`${urlBase}/get_position_cab/${data.user.id}`, (data) => {
+        jQuery.post(`${urlBase}/get_current_position_cab/${data.user.id}`, (data) => {
           if (data) {
             if (data.status) {
               if (data.positions) {
                 markerCabman.setPosition({
-                  lat: data.positions.position_cabman.latitude,
-                  lng: data.positions.position_cabman.longitude
+                  lat: data.positions.latitude,
+                  lng: data.positions.longitude
                 })
               } else {
                 countNulls += 1

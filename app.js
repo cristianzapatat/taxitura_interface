@@ -46,9 +46,10 @@ io.on('connection', socket => {
   })
 
   socket.on('savePositionCab', data => {
-    positionsCab[data.cabman.id] = {
-      position_cabman: data.position_cabman
+    if (positionsCab[data.cabman.id]) {
+      positionsCab[data.cabman.id] = []
     }
+    positionsCab[data.cabman.id].push(data.position_cabman)
   })
 
   socket.on('taxitura', order => {
@@ -98,7 +99,6 @@ io.on('connection', socket => {
           finishedOrders[order.service.id] = order
           delete orders[order.service.id]
           delete ordersInForce[order.user.id]
-          delete positionsCab[order.cabman.id]
           getBot().emit('end', order)
         }
       }
@@ -219,12 +219,10 @@ io.on('connection', socket => {
           return res.json()
         })
         .then(json => {
-          positionsCab[service.cabman.id] = {
-            position_cabman: {
-              latitude: data.position.latitude,
-              longitude: data.position.longitude
-            }
-          }
+          positionsCab[service.cabman.id].push({
+            latitude: data.position.latitude,
+            longitude: data.position.longitude
+          })
           getBot().emit('returnPositionBot', {
             status: true,
             service: service.service,
@@ -375,7 +373,7 @@ app.get('/get_services_canceled/:id', (req, res) => {
   res.status(200).send(list)
 })
 
-app.post('/get_position_cab/:user', (req, res) => {
+app.post('/get_current_position_cab/:user', (req, res) => {
   let user = req.params.user
   if (user) {
     let service = ordersInForce[user]
@@ -384,10 +382,17 @@ app.post('/get_position_cab/:user', (req, res) => {
       if (idCabman) {
         let positions = positionsCab[idCabman]
         if (positions) {
-          res.status(200).send({
-            status: true,
-            positions
-          })
+          if (positions.length > 0) {
+            res.status(200).send({
+              status: true,
+              positions: positionsCab[positionsCab.length - 1]
+            })
+          } else {
+            res.status(200).send({
+              status: true,
+              positions: null
+            })
+          }
         } else {
           res.status(200).send({
             status: true,
