@@ -103,7 +103,7 @@
     <div id="myModal" class="modal">
       <div class="modal-content">
         <div class="icon">
-          <img id="img" name="img" height="45" width="45">
+          <img id="icon" name="icon" height="45" width="45">
         </div>
         <p>El servicio ha finalizado...</p>
       </div>
@@ -120,6 +120,7 @@
     let countNulls = 0
     var modal = document.getElementById('myModal')
     jQuery('#img').attr('src', `${urlBase}/img/logo/png`)
+    jQuery('#icon').attr('src', `${urlBase}/img/logo/png`)
     function updatePosition () {
       idSet = setInterval(() => {
         jQuery.post(`${urlBase}/get_position_cab/${data.user.id}`, (data) => {
