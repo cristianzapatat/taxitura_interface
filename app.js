@@ -385,7 +385,7 @@ app.post('/get_current_position_cab/:user', (req, res) => {
           if (positions.length > 0) {
             res.status(200).send({
               status: true,
-              positions: positionsCab[positionsCab.length - 1]
+              positions: positions[positions.length - 1]
             })
           } else {
             res.status(200).send({
