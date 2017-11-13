@@ -89,7 +89,7 @@
     <div id="header" class="header">
       <div id="logo" class="logo">
         <a href="https://www.facebook.com/taxitura/">
-          <img src="http://taxitura-server.herokuapp.com/img/logo/png" height="48" width="48">
+          <img id="img" name="img" height="48" width="48">
         </a>
       </div>
       <div id="title" class="title">
@@ -103,7 +103,7 @@
     <div id="myModal" class="modal">
       <div class="modal-content">
         <div class="icon">
-          <img src="http://taxitura-server.herokuapp.com/img/logo/png" height="45" width="45">
+          <img id="img" name="img" height="45" width="45">
         </div>
         <p>El servicio ha finalizado...</p>
       </div>
@@ -112,13 +112,14 @@
 
   <script language="JavaScript">
     /* global google, jQuery:true */
-    let urlBase = 'http://taxitura-server.herokuapp.com'
+    let urlBase = `http//:${window.location.host}`
     var markerCabman
     var markerUser
     var data
     var idSet
     let countNulls = 0
     var modal = document.getElementById('myModal')
+    jQuery('#img').attr('src', `${urlBase}/img/logo/png`)
     function updatePosition () {
       idSet = setInterval(() => {
         jQuery.post(`${urlBase}/get_position_cab/${data.user.id}`, (data) => {
