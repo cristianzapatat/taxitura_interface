@@ -46,7 +46,7 @@ io.on('connection', socket => {
   })
 
   socket.on('savePositionCab', data => {
-    if (positionsCab[data.cabman.id]) {
+    if (!positionsCab[data.cabman.id]) {
       positionsCab[data.cabman.id] = []
     }
     positionsCab[data.cabman.id].push(data.position_cabman)
