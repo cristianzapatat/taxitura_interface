@@ -23,6 +23,7 @@ let positionsCab = {} // Posicion del taxista cuando esta en servicio
 let orders = {} // Lista de servicios que llegan desde Facebook
 let finishedOrders = {} // Lista de servicios terminados
 let ordersInForce = {} // Lista de servicios en proceso
+let ordersForCabman = {} // Almacena el servicio en el que se encuentre un taxista
 let pendingOrders = {} // Lista de los servicios pendientes por taxista
 let canceledOrders = {} // Lista de los servicios cancelados por taxista
 
@@ -72,6 +73,7 @@ io.on('connection', socket => {
             }
             orders[order.service.id] = order
             ordersInForce[order.user.id] = order
+            ordersForCabman[order.cabman.id] = order.user.id
             getBot().emit('order', order)
             socket.emit('accept', order)
             savePositionCab(order.cabman.id, order.position_cabman)
@@ -133,6 +135,16 @@ io.on('connection', socket => {
     } else {
       socket.emit('accept', null)
     }
+  })
+
+  socket.on('serviceInMemory', id => {
+    let idUser = ordersForCabman[id]
+    let order = null
+    if (idUser) {
+      order = ordersInForce[idUser]
+      if (!order) order = null
+    }
+    socket.emit('isServiceInMemory', order)
   })
 
   socket.on('nextService', idCabman => {
