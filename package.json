@@ -1,6 +1,6 @@
 {
   "name": "servidor",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "servidor",
   "main": "index.js",
   "scripts": {
@@ -22,5 +22,8 @@
     "hbs": "~4.0.1",
     "node-fetch": "^1.7.3",
     "socket.io": "^1.7.4"
+  },
+  "engines": {
+    "node": ">8.1.2"
   }
 }

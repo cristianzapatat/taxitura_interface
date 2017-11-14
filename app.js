@@ -68,9 +68,6 @@ io.on('connection', socket => {
         if (orders[order.service.id]) {
           if (orders[order.service.id].service.state === 0) {
             order.service.state = 1
-            order['chanel'] = {
-              socket: socket.id
-            }
             orders[order.service.id] = order
             ordersInForce[order.user.id] = order
             ordersForCabman[order.cabman.id] = order.user.id
@@ -108,14 +105,9 @@ io.on('connection', socket => {
     if (order.action === 'order') {
       if (orders[order.service.id].service.state === 0) {
         order.service.state = 1
-        order['chanel'] = {
-          socket: socket.id
-        }
         orders[order.service.id] = order
         ordersInForce[order.user.id] = order
-        let startLoc = `${order.position_cabman.latitude},${order.position_cabman.longitude}`
-        let endLoc = `${order.position_user.latitude},${order.position_user.longitude}`
-        fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${startLoc}&destinations=${endLoc}&key=${consts.apiDistanceAndTime}&units=metric`)
+        fetch(consts.getDistanceMatrix(order.position_cabman, order.position_user))
           .then(response => {
             return response.json()
           })
@@ -203,46 +195,36 @@ io.on('connection', socket => {
     if (user) {
       let service = ordersInForce[user.id]
       if (service) {
-        if (service.chanel) {
-          let sock = clients[service.chanel.socket]
-          if (sock) {
-            sock.emit('getPositionApp', service)
+        let positions = positionsCab[service.cabman.id]
+        if (positions) {
+          if (positions.length >= 0) {
+            let position = positions[positions.length - 1]
+            fetch(consts.getDistanceMatrix(position, service.position_user))
+              .then(res => {
+                return res.json()
+              })
+              .then(json => {
+                getBot().emit('returnPositionBot', {
+                  status: true,
+                  service: service.service,
+                  position_cabman: {
+                    distance: json.rows[0].elements[0].distance.value,
+                    time: json.rows[0].elements[0].duration.value,
+                    latitude: position.latitude,
+                    longitude: position.longitude
+                  },
+                  user: service.user
+                })
+              })
           } else {
-            socket.emit('returnPositionBot', {status: false, sock: false, user: service.user}) // Socket off
+            socket.emit('returnPositionBot', {status: false, user: user})
           }
         } else {
-          socket.emit('returnPositionBot', {status: false, sock: true, user: user})
+          socket.emit('returnPositionBot', {status: false, user: user})
         }
       } else {
-        socket.emit('returnPositionBot', {status: null, sock: false, user: user})
+        socket.emit('returnPositionBot', {status: null, user: user})
       }
-    }
-  })
-
-  socket.on('returnPositionApp', data => {
-    let service = ordersInForce[data.user.id]
-    if (service) {
-      let startLoc = `${data.position.latitude},${data.position.longitude}`
-      let endLoc = `${service.position_user.latitude},${service.position_user.longitude}`
-      fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${startLoc}&destinations=${endLoc}&key=${consts.apiDistanceAndTime}&units=metric`)
-        .then(res => {
-          return res.json()
-        })
-        .then(json => {
-          getBot().emit('returnPositionBot', {
-            status: true,
-            service: service.service,
-            position_cabman: {
-              distance: json.rows[0].elements[0].distance.value,
-              time: json.rows[0].elements[0].duration.value,
-              latitude: data.position.latitude,
-              longitude: data.position.longitude
-            },
-            user: service.user
-          })
-        })
-    } else {
-      getBot().emit('returnPositionBot', {status: null, sock: false, user: data.user})
     }
   })
 
