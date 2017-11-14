@@ -77,7 +77,13 @@ io.on('connection', socket => {
             ordersInForce[order.user.id] = order
             getBot().emit('order', order)
             socket.emit('accept', order)
-
+            if (!positionsCab[order.cabman.id]) {
+              positionsCab[order.cabman.id] = []
+            }
+            positionsCab[order.cabman.id].push({
+              latitude: order.position_cabman.latitude,
+              longitude: order.position_cabman.longitude
+            })
             deleteServiceForAccept(order.service.id)
           } else {
             socket.emit('accept', null)
@@ -128,6 +134,13 @@ io.on('connection', socket => {
             getBot().emit('order', order)
             socket.emit('orderCanceled', order)
           })
+        if (!positionsCab[order.cabman.id]) {
+          positionsCab[order.cabman.id] = []
+        }
+        positionsCab[order.cabman.id].push({
+          latitude: order.position_cabman.latitude,
+          longitude: order.position_cabman.longitude
+        })
         deleteServiceForAccept(order.service.id)
       } else {
         socket.emit('accept', null)
@@ -219,10 +232,6 @@ io.on('connection', socket => {
           return res.json()
         })
         .then(json => {
-          positionsCab[service.cabman.id].push({
-            latitude: data.position.latitude,
-            longitude: data.position.longitude
-          })
           getBot().emit('returnPositionBot', {
             status: true,
             service: service.service,
