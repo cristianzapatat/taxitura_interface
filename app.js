@@ -233,7 +233,8 @@ io.on('connection', socket => {
             status: true,
             service: service.service,
             position_cabman: {
-              distance: json,
+              distance: json.rows[0].elements[0].distance.value,
+              time: json.rows[0].elements[0].duration.value,
               latitude: data.position.latitude,
               longitude: data.position.longitude
             },
