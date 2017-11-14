@@ -46,10 +46,7 @@ io.on('connection', socket => {
   })
 
   socket.on('savePositionCab', data => {
-    if (!positionsCab[data.cabman.id]) {
-      positionsCab[data.cabman.id] = []
-    }
-    positionsCab[data.cabman.id].push(data.position_cabman)
+    savePositionCab(data.cabman.id, data.position_cabman)
   })
 
   socket.on('taxitura', order => {
@@ -77,13 +74,7 @@ io.on('connection', socket => {
             ordersInForce[order.user.id] = order
             getBot().emit('order', order)
             socket.emit('accept', order)
-            if (!positionsCab[order.cabman.id]) {
-              positionsCab[order.cabman.id] = []
-            }
-            positionsCab[order.cabman.id].push({
-              latitude: order.position_cabman.latitude,
-              longitude: order.position_cabman.longitude
-            })
+            savePositionCab(order.cabman.id, order.position_cabman)
             deleteServiceForAccept(order.service.id)
           } else {
             socket.emit('accept', null)
@@ -134,13 +125,7 @@ io.on('connection', socket => {
             getBot().emit('order', order)
             socket.emit('orderCanceled', order)
           })
-        if (!positionsCab[order.cabman.id]) {
-          positionsCab[order.cabman.id] = []
-        }
-        positionsCab[order.cabman.id].push({
-          latitude: order.position_cabman.latitude,
-          longitude: order.position_cabman.longitude
-        })
+        savePositionCab(order.cabman.id, order.position_cabman)
         deleteServiceForAccept(order.service.id)
       } else {
         socket.emit('accept', null)
@@ -439,6 +424,16 @@ function getBot () {
 
 function redirectDefault (res) {
   res.redirect('https://www.facebook.com/taxitura/')
+}
+
+function savePositionCab (id, position) {
+  if (!positionsCab[id]) {
+    positionsCab[id] = []
+  }
+  positionsCab[id].push({
+    latitude: position.latitude,
+    longitude: position.longitude
+  })
 }
 
 function deleteServiceForAccept (idService) {
