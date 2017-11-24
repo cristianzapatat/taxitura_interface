@@ -50,13 +50,23 @@ io.on('connection', socket => {
 
   socket.on('taxitura', order => {
     if (order.action === 'order') {
-      order['service'] = {
-        id: new Date().getTime(),
-        state: 0
-      }
-      orders[order.service.id] = order
-      ordersInForce[order.user.id] = order
-      io.emit('app', order)
+      fetch(consts.getGeocoding(order.position_user))
+        .then(result => {
+          return result.json()
+        })
+        .then(json => {
+          order['service'] = {
+            id: new Date().getTime(),
+            state: 0
+          }
+          let full = json.results[0].formatted_address
+          let pos = full.split(',')
+          order.position_user['addresFull'] = full
+          order.position_user['addres'] = `${pos[0]}, ${pos[1]}`
+          orders[order.service.id] = order
+          ordersInForce[order.user.id] = order
+          io.emit('app', order)
+        })
     }
   })
 
