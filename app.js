@@ -61,8 +61,8 @@ io.on('connection', socket => {
           }
           let full = json.results[0].formatted_address
           let pos = full.split(',')
-          order.position_user['addresFull'] = full
-          order.position_user['addres'] = `${pos[0]}, ${pos[1]}`
+          order.position_user['addressFull'] = full
+          order.position_user['address'] = `${pos[0]}, ${pos[1]}`
           orders[order.service.id] = order
           ordersInForce[order.user.id] = order
           io.emit('app', order)
