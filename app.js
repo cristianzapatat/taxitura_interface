@@ -68,8 +68,9 @@ io.on('connection', socket => {
   })
 
   socket.on('app', order => {
+    console.log(order)
     if (order) {
-      if (order.action === 'order') {
+      if (order.action === 'accept') {
         if (orders[order.service.id]) {
           if (orders[order.service.id].action === 'order') {
             orders[order.service.id] = order
@@ -79,23 +80,21 @@ io.on('connection', socket => {
             socket.emit('accept', order)
             savePositionCab(order.cabman.id, order.position_cabman)
             deleteServiceForAccept(order.service.id)
-          } else {
-            socket.emit('accept', null)
-          }
-        } else {
-          socket.emit('accept', null)
-        }
+          } else { socket.emit('accept', null) }
+        } else { socket.emit('accept', null) }
       } else if (order.action === 'arrive') {
-        if (orders[order.service.id].action === 'arrive') {
+        if (orders[order.service.id].action === 'accept') {
           orders[order.service.id] = order
           ordersInForce[order.user.id] = order
+          savePositionCab(order.cabman.id, order.position_cabman)
           getBot().emit('arrive', order)
         }
       } else if (order.action === 'end') {
-        if (orders[order.service.id].action === 'end') {
+        if (orders[order.service.id].action === 'arrive') {
           finishedOrders[order.service.id] = order
           delete orders[order.service.id]
           delete ordersInForce[order.user.id]
+          savePositionCab(order.cabman.id, order.position_cabman)
           getBot().emit('end', order)
         }
       }
