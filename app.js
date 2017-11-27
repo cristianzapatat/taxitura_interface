@@ -55,10 +55,7 @@ io.on('connection', socket => {
           return result.json()
         })
         .then(json => {
-          order['service'] = {
-            id: new Date().getTime(),
-            state: 0
-          }
+          order['service'] = { id: new Date().getTime() }
           let full = json.results[0].formatted_address
           let pos = full.split(',')
           order.position_user['addressFull'] = full
@@ -74,8 +71,7 @@ io.on('connection', socket => {
     if (order) {
       if (order.action === 'order') {
         if (orders[order.service.id]) {
-          if (orders[order.service.id].service.state === 0) {
-            order.service.state = 1
+          if (orders[order.service.id].action === 'order') {
             orders[order.service.id] = order
             ordersInForce[order.user.id] = order
             ordersForCabman[order.cabman.id] = order.user.id
@@ -90,16 +86,13 @@ io.on('connection', socket => {
           socket.emit('accept', null)
         }
       } else if (order.action === 'arrive') {
-        if (orders[order.service.id].service.state === 1) {
-          order.service.state = 2
+        if (orders[order.service.id].action === 'arrive') {
           orders[order.service.id] = order
           ordersInForce[order.user.id] = order
           getBot().emit('arrive', order)
-          socket.emit('arrive', order)
         }
       } else if (order.action === 'end') {
-        if (orders[order.service.id].service.state === 2) {
-          order.service.state = 3
+        if (orders[order.service.id].action === 'end') {
           finishedOrders[order.service.id] = order
           delete orders[order.service.id]
           delete ordersInForce[order.user.id]
@@ -111,8 +104,7 @@ io.on('connection', socket => {
 
   socket.on('acceptCancel', order => {
     if (order.action === 'order') {
-      if (orders[order.service.id].service.state === 0) {
-        order.service.state = 1
+      if (orders[order.service.id].action === 'order') {
         orders[order.service.id] = order
         ordersInForce[order.user.id] = order
         fetch(consts.getDistanceMatrix(order.position_cabman, order.position_user))
