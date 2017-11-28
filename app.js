@@ -68,7 +68,6 @@ io.on('connection', socket => {
   })
 
   socket.on('app', order => {
-    console.log(order)
     if (order) {
       if (order.action === 'accept') {
         if (orders[order.service.id]) {
