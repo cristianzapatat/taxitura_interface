@@ -52,11 +52,9 @@ io.on('connection', socket => {
     if (order.action === 'order') {
       fetch(consts.getGeocoding(order.position_user))
         .then(result => {
-          console.log('el result----------------------------')
           return result.json()
         })
         .then(json => {
-          console.log(json)
           order['service'] = { id: new Date().getTime() }
           let full = json.results[0].formatted_address
           let pos = full.split(',')
@@ -67,7 +65,7 @@ io.on('connection', socket => {
           io.emit('app', order)
         })
         .catch(err => {
-          console.log('el errror')
+          // TODO definir
           console.log(err)
         })
     }
