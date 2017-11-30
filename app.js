@@ -105,7 +105,7 @@ io.on('connection', socket => {
   })
 
   socket.on('acceptCancel', order => {
-    if (order.action === 'order') {
+    if (order.action === 'accept') {
       if (orders[order.service.id].action === 'order') {
         orders[order.service.id] = order
         ordersInForce[order.user.id] = order
@@ -118,6 +118,7 @@ io.on('connection', socket => {
             order.position_cabman.time = json.rows[0].elements[0].duration.value
             orders[order.service.id] = order
             ordersInForce[order.user.id] = order
+            ordersForCabman[order.cabman.id] = order.user.id
             getBot().emit('order', order)
             socket.emit('orderCanceled', order)
           })
