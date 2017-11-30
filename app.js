@@ -52,6 +52,8 @@ io.on('connection', socket => {
     if (order.action === 'order') {
       fetch(consts.getGeocoding(order.position_user))
         .then(result => {
+          console.log('el result----------------------------')
+          console.log(result)
           return result.json()
         })
         .then(json => {
