@@ -171,10 +171,14 @@
       let styleMap = []
       jQuery.ajax({
         url: `${urlBase}/json/mapStyleDay`,
+        async: true,
         success: (data) => {
-          console.log(data)
+          console.log('style test')
+          styleMap = data
         }
       })
+      console.log('luego del ajax')
+      console.log(styleMap)
 
       var map = new google.maps.Map(document.getElementById('map'), {
         zoom: 14,
