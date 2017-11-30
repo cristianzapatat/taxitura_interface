@@ -124,6 +124,14 @@
     var data
     var idSet
     let countNulls = 0
+    let time = {
+      ZERO: 0,
+      MINUTE: 60000, // dato en milisegundos = 1 minuto
+      START_NIGHT: 1080, // dato en minutos = 6pm
+      MIDDLE_NIGHT: 1440, // dato en minutos = 11:53pm
+      END_NIGHT: 360, // dato en minutos = 5am
+      FOR_MINUTE: 60
+    }
     var modal = document.getElementById('myModal')
     jQuery('#img').attr('src', `${urlBase}/img/logo/png`)
     jQuery('#icon').attr('src', `${urlBase}/img/logo/png`)
@@ -165,20 +173,38 @@
       countNulls = 0
     }
 
+    function getIsMap () {
+      let date = new Date()
+      if ((((date.getHours() * time.FOR_MINUTE) + date.getMinutes()) >= time.START_NIGHT &&
+      ((date.getHours() * time.FOR_MINUTE) + date.getMinutes()) <= time.MIDDLE_NIGHT) ||
+      (date.getHours() >= time.ZERO &&
+      ((date.getHours() * time.FOR_MINUTE) + date.getMinutes()) <= time.END_NIGHT)) {
+        return false
+      }
+      return true
+    }
+
     function initMap () {
       data = JSON.parse(document.getElementById('data_tt').value)
 
-      let styleMap = []
+      let styleDay = []
       jQuery.ajax({
         url: `${urlBase}/json/mapStyleDay`,
         async: false,
         success: (data) => {
-          console.log('style test')
-          styleMap = data
+          styleDay = data
         }
       })
-      console.log('luego del ajax')
-      console.log(styleMap)
+      let styleNight = []
+      jQuery.ajax({
+        url: `${urlBase}/json/mapStyleNight`,
+        async: false,
+        success: (data) => {
+          styleNight = data
+        }
+      })
+
+      let styleMap = getIsMap() ? styleDay : styleNight
 
       var map = new google.maps.Map(document.getElementById('map'), {
         zoom: 14,
