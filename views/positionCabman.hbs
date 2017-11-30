@@ -113,7 +113,6 @@
   <script language="JavaScript">
     /* global google, jQuery:true */
     let urlBase = `http://${window.location.host}`
-    let status = getIsMap()
     var styleDay = []
     var styleNight = []
     var map
@@ -131,6 +130,7 @@
       FOR_MINUTE: 60,
       REFRESH_MAP: 2000 // 2 segundos
     }
+    let status = getIsMap()
     var modal = document.getElementById('myModal')
     jQuery('#img').attr('src', `${urlBase}/img/logo/png`)
     jQuery('#icon').attr('src', `${urlBase}/img/logo/png`)
