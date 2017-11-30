@@ -171,7 +171,7 @@
       let styleMap = []
       jQuery.ajax({
         url: `${urlBase}/json/mapStyleDay`,
-        async: true,
+        async: false,
         success: (data) => {
           console.log('style test')
           styleMap = data
