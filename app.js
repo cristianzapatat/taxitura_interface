@@ -344,6 +344,24 @@ app.get('/img/:img/png', (req, res) => {
   }
 })
 
+app.get('/json/:name', (req, res) => {
+  let name = req.params.name
+  if (name) {
+    let root = `./json/${name}.json`
+    if (fs.existsSync(root)) {
+      var json = fs.readFileSync(root, 'utf8')
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(json)
+    } else {
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end('{}')
+    }
+  } else {
+    res.writeHead(200, { 'Content-Type': 'application/json' })
+    res.end('{}')
+  }
+})
+
 app.get('/get_services_canceled/:id', (req, res) => {
   let list = []
   if (req.params.id) {

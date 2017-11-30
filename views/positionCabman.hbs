@@ -82,6 +82,12 @@
         cursor: default;
       }
     </style>
+    <script id="host" type="application/json">
+      {
+        'host': `http://${window.location.host}`
+      }
+    </script>
+    <script id="styleDay" type="application/json" src=""></script>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
   </head>
 
@@ -161,8 +167,18 @@
 
     function initMap () {
       data = JSON.parse(document.getElementById('data_tt').value)
+
+      let styleMap = []
+      jQuery.ajax({
+        url: `${urlBase}/json/mapStyleDay`,
+        success: (data) => {
+          console.log(data)
+        }
+      })
+
       var map = new google.maps.Map(document.getElementById('map'), {
         zoom: 14,
+        styles: styleMap,
         center: (data.cabman) ? {lat: data.cabman.lat, lng: data.cabman.lng} : {lat: 3.8863253, lng: -77.0498256}
       })
 
