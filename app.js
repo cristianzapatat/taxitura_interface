@@ -53,10 +53,10 @@ io.on('connection', socket => {
       fetch(consts.getGeocoding(order.position_user))
         .then(result => {
           console.log('el result----------------------------')
-          console.log(result)
           return result.json()
         })
         .then(json => {
+          console.log(json)
           order['service'] = { id: new Date().getTime() }
           let full = json.results[0].formatted_address
           let pos = full.split(',')
