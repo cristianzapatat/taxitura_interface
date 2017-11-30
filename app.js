@@ -64,6 +64,10 @@ io.on('connection', socket => {
           ordersInForce[order.user.id] = order
           io.emit('app', order)
         })
+        .catch(err => {
+          console.log('el errror')
+          console.log(err)
+        })
     }
   })
 
