@@ -383,6 +383,19 @@ app.get('/get_services_canceled/:id', (req, res) => {
   res.status(200).send(list)
 })
 
+let algo = []
+app.put('/save_position_cab', (req, res) => {
+  algo.push(req.body)
+  res.status(200).send({algo: 200})
+})
+
+app.get('/algo', (req, res) => {
+  res.status(200).send({
+    status: 'OK',
+    algo
+  })
+})
+
 app.post('/get_current_position_cab/:user', (req, res) => {
   let user = req.params.user
   if (user) {
