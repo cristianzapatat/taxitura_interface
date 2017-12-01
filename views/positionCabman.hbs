@@ -119,6 +119,7 @@
     var markerCabman
     var markerUser
     var data
+    var idMap
     var idSet
     let countNulls = 0
     let time = {
@@ -168,15 +169,15 @@
     }
 
     function updateStyleMap () {
-      setInterval(() => {
+      idMap = setInterval(() => {
         if (status !== getIsMap()) {
-          let styleMap = getIsMap() ? styleDay : styleNight
-          map.setStyles(styleMap)
+          window.location.reload()
         }
       }, time.MINUTE)
     }
 
     function clearTime () {
+      clearInterval(idMap)
       clearInterval(idSet)
       countNulls = 0
     }
@@ -203,7 +204,11 @@
       map = new google.maps.Map(document.getElementById('map'), {
         zoom: 16,
         styles: styleMap,
-        center: (data.cabman) ? {lat: data.cabman.lat, lng: data.cabman.lng} : {lat: 3.8863253, lng: -77.0498256}
+        center: (data.cabman) ? {lat: data.cabman.lat, lng: data.cabman.lng} : {lat: 3.8863253, lng: -77.0498256},
+        disableDefaultUI: true,
+        zoomControl: true,
+        fullscreenControl: true,
+        mapTypeControl: true
       })
 
       markerCabman = new google.maps.Marker({
