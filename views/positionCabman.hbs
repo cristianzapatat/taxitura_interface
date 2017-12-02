@@ -23,7 +23,7 @@
         align-items: center;
         justify-content: end;
         font-size: 20px;
-        background: rgba(243, 184, 73, 0.14) !important;
+        background: rgba(255, 148, 0, 0.6509803921568628) !important;
         width: 100%;
         height: 8%;
         border-bottom-style: solid;
@@ -40,6 +40,7 @@
       }
       .title {
         margin-left: 5px;
+        font-weight: 600;
       }
       .modal {
         display: none;
@@ -86,21 +87,21 @@
   </head>
 
   <body>
-    <div id="header" class="header">
-      <div id="logo" class="logo">
+    <div id="header" name="header" class="header">
+      <div id="logo" name="logo" class="logo">
         <a href="https://www.facebook.com/taxitura/">
           <img id="img" name="img" height="48" width="48">
         </a>
       </div>
-      <div id="title" class="title">
+      <div id="title" name="title" class="title">
         <label>Taxitura - Posición Taxi</label>
       </div>
       <div style="display:none;">
         <input type="hidden" name="data_tt" id="data_tt" value="{{data}}">
       </div>
     </div>
-    <div id="map"></div>
-    <div id="myModal" class="modal">
+    <div id="map" name="map"></div>
+    <div id="myModal" name="myModal" class="modal">
       <div class="modal-content">
         <div class="icon">
           <img id="icon" name="icon" height="45" width="45">
@@ -109,6 +110,21 @@
       </div>
     </div>
   </body>
+
+  <script type="text/javascript">
+    /* global jQuery:true */
+    var isMobile = {
+      Android: () => { return navigator.userAgent.match(/Android/i) },
+      BlackBerry: () => { return navigator.userAgent.match(/BlackBerry/i) },
+      iOS: () => { return navigator.userAgent.match(/iPhone|iPad|iPod/i) },
+      Opera: () => { return navigator.userAgent.match(/Opera Mini/i) },
+      Windows: () => { return navigator.userAgent.match(/IEMobile/i) },
+      any: () => { return (isMobile.Android() || isMobile.BlackBerry() || isMobile.iOS() || isMobile.Opera() || isMobile.Windows()) }
+    }
+    if (isMobile.any()) {
+      jQuery('#header').css('display', 'none')
+    }
+  </script>
 
   <script language="JavaScript">
     /* global google, jQuery:true */
