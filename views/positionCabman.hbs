@@ -6,7 +6,7 @@
     <title>Posición Taxista - Taxitura</title>
     <style>
       #map {
-        height: 90%;
+        height: 100%;
       }
       html, body {
         height: 100%;
@@ -17,6 +17,9 @@
         cursor: pointer;
       }
       .header {
+        position: absolute;
+        top: 0;
+        z-index: 1
         display: -webkit-flex;
         display: flex;
         flex-direction: row;
@@ -222,9 +225,7 @@
         styles: styleMap,
         center: (data.cabman) ? {lat: data.cabman.lat, lng: data.cabman.lng} : {lat: 3.8863253, lng: -77.0498256},
         disableDefaultUI: true,
-        zoomControl: true,
-        fullscreenControl: true,
-        mapTypeControl: true
+        zoomControl: true
       })
 
       markerCabman = new google.maps.Marker({
