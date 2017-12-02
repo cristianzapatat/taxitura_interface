@@ -55,7 +55,12 @@ io.on('connection', socket => {
           return result.json()
         })
         .then(json => {
-          order['service'] = { id: new Date().getTime() }
+          let date = new Date()
+          order['service'] = {
+            id: date.getTime(),
+            origin: 'facebook',
+            date_creation: date
+          }
           let full = json.results[0].formatted_address
           let pos = full.split(',')
           order.position_user['addressFull'] = full
