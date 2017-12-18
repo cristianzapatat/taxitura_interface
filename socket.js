@@ -233,7 +233,7 @@ module.exports = (socket, io) => {
       if (order.channel) {
         let sock = _global.clients[order.channel]
         if (sock) {
-          sock.emit(_kts.socket.onMyWay)
+          sock.emit(_kts.socket.onMyWay, data)
         }
       }
     }
