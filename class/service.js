@@ -18,6 +18,11 @@ class Service {
     return order
   }
 
+  addChanel (order, channel) {
+    order[_kts.json.channel] = channel
+    return order
+  }
+
   addTimeAndDistance (order, distance, time) {
     order.position_cabman.distance = distance || -1
     order.position_cabman.time = time || -1

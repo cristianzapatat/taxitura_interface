@@ -30,6 +30,8 @@ module.exports = {
     quality: 'quality',
     getPositionBot: 'getPositionBot',
     returnPositionBot: 'returnPositionBot',
+    onMyWay: 'onMyWay',
+    notFoundService: 'notFoundService',
     disconnect: 'disconnect'
   },
   action: {
@@ -44,7 +46,8 @@ module.exports = {
     withoutOrigin: null,
     addressFull: 'addressFull',
     address: 'address',
-    quality: 'quality'
+    quality: 'quality',
+    channel: 'channel'
   },
   operators: {
     coma: ','

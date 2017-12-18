@@ -52,6 +52,7 @@ module.exports = (socket, io) => {
     if (order.action === _kts.action.accept) {
       if (_global.orders[order.service.id]) {
         if (_global.orders[order.service.id].action === _kts.action.order) {
+          order = Service.addChanel(order, socket.id)
           _global.orders[order.service.id] = order
           _global.ordersInForce[order.user.id] = order
           _global.ordersForCabman[order.cabman.id] = order.user.id
@@ -85,6 +86,7 @@ module.exports = (socket, io) => {
   socket.on(_kts.socket.acceptCancel, order => {
     if (order.action === _kts.action.accept) {
       if (_global.orders[order.service.id].action === _kts.action.order) {
+        order = Service.addChanel(order, socket.id)
         _global.orders[order.service.id] = order
         _global.ordersInForce[order.user.id] = order
         fetch(_url.getDistanceMatrix(order.position_cabman, order.position_user))
@@ -116,7 +118,13 @@ module.exports = (socket, io) => {
     let order = null
     if (idUser) {
       order = _global.ordersInForce[idUser]
-      if (!order) order = null
+      if (!order) {
+        order = null
+      } else {
+        order = Service.addChanel(order, socket.id)
+        _global.orders[order.service.id] = order
+        _global.ordersInForce[order.user.id] = order
+      }
     }
     socket.emit(_kts.socket.isServiceInMemory, order)
   })
@@ -212,6 +220,21 @@ module.exports = (socket, io) => {
       } else {
         let state = Service.searchServiceForUserOnOrders(user.id) !== null
         socket.emit(_kts.socket.returnPositionBot, {status: null, case: state, user: user})
+      }
+    }
+  })
+
+  // Callback para indicar al taxista que su usuario va en camino
+  socket.on(_kts.socket.onMyWay, data => {
+    let order = _global.ordersInForce[data.user.id]
+    if (!order) {
+      socket.emit(_kts.socket.notFoundService, data)
+    } else {
+      if (order.channel) {
+        let sock = _global.clients[order.channel]
+        if (sock) {
+          sock.emit(_kts.socket.onMyWay)
+        }
       }
     }
   })
