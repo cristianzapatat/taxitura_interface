@@ -226,6 +226,7 @@ module.exports = (socket, io) => {
 
   // Callback para indicar al taxista que su usuario va en camino
   socket.on(_kts.socket.onMyWay, data => {
+    console.log(data)
     let order = _global.ordersInForce[data.user.id]
     if (!order) {
       socket.emit(_kts.socket.notFoundService, data)
@@ -233,6 +234,7 @@ module.exports = (socket, io) => {
       if (order.channel) {
         let sock = _global.clients[order.channel]
         if (sock) {
+          console.log('emittttttt------')
           sock.emit(_kts.socket.onMyWay, data)
         }
       }
