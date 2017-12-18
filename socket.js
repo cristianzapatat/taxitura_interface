@@ -241,7 +241,7 @@ module.exports = (socket, io) => {
             } else {
               let time = new Date()
               if ((time.getTime() - order.onMyWay[order.onMyWay.length - 1]) > _kts.time.onMyWay) {
-                order.onMyWay.push(time)
+                order.onMyWay.push(time.getTime())
                 sock.emit(_kts.socket.onMyWay, data)
               }
             }
