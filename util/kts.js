@@ -47,9 +47,13 @@ module.exports = {
     addressFull: 'addressFull',
     address: 'address',
     quality: 'quality',
-    channel: 'channel'
+    channel: 'channel',
+    onMyWay: 'onMyWay'
   },
   operators: {
     coma: ','
+  },
+  time: {
+    onMyWay: 180000
   }
 }

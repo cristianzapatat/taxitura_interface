@@ -226,16 +226,28 @@ module.exports = (socket, io) => {
 
   // Callback para indicar al taxista que su usuario va en camino
   socket.on(_kts.socket.onMyWay, data => {
-    console.log(data)
     let order = _global.ordersInForce[data.user.id]
     if (!order) {
       socket.emit(_kts.socket.notFoundService, data)
     } else {
       if (order.channel) {
-        let sock = _global.clients[order.channel]
-        if (sock) {
-          console.log('emittttttt------')
-          sock.emit(_kts.socket.onMyWay, data)
+        if (order.action === _kts.action.arrive) {
+          let sock = _global.clients[order.channel]
+          if (sock) {
+            if (!order.onMyWay) {
+              order[_kts.json.onMyWay] = []
+              order.onMyWay.push(new Date().getTime())
+              sock.emit(_kts.socket.onMyWay, data)
+            } else {
+              let time = new Date()
+              if ((time.getTime() - order.onMyWay[order.onMyWay.length - 1]) > _kts.time.onMyWay) {
+                order.onMyWay.push(time)
+                sock.emit(_kts.socket.onMyWay, data)
+              }
+            }
+            _global.orders[order.service.id] = order
+            _global.ordersInForce[order.user.id] = order
+          }
         }
       }
     }
