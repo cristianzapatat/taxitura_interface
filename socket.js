@@ -37,6 +37,7 @@ module.exports = (socket, io) => {
         return result.json()
       })
       .then(json => {
+        console.log(json)
         order = Service.create(order, json.results[0].formatted_address, _kts.json.facebook)
         _global.orders[order.service.id] = order
         io.emit(_kts.socket.receiveService, order)
