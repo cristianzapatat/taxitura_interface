@@ -67,17 +67,25 @@ module.exports = (socket, io) => {
       if (_global.orders[order.service.id].action === _kts.action.accept) {
         _global.orders[order.service.id] = order
         _global.ordersInForce[order.user.id] = order
+        _fns.getBot().emit(_kts.socket.responseOrder, order)
         _fns.savePositionCab(order.cabman.id, order.position_cabman)
-        _fns.getBot().emit(_kts.socket.arriveOrder, order)
+      }
+    // El pasajero abordo el taxi según información del taxista
+    } else if (order.action === _kts.action.aboard) {
+      if (_global.orders[order.service.id].action === _kts.action.arrive) {
+        _global.orders[order.service.id] = order
+        _global.ordersInForce[order.user.id] = order
+        _fns.getBot().emit(_kts.socket.responseOrder, order)
+        _fns.savePositionCab(order.cabman.id, order.position_cabman)
       }
     // fin del servio
     } else if (order.action === _kts.action.end) {
-      if (_global.orders[order.service.id].action === _kts.action.arrive) {
+      if (_global.orders[order.service.id].action === _kts.action.aboard) {
         _global.finishedOrders[order.service.id] = order
         delete _global.orders[order.service.id]
         delete _global.ordersInForce[order.user.id]
+        _fns.getBot().emit(_kts.socket.responseOrder, order)
         _fns.savePositionCab(order.cabman.id, order.position_cabman)
-        _fns.getBot().emit(_kts.socket.endOrder, order)
       }
     }
   })

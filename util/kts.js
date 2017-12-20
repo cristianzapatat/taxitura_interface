@@ -16,8 +16,6 @@ module.exports = {
     receiveService: 'receiveService',
     responseService: 'responseService',
     responseOrder: 'responseOrder',
-    arriveOrder: 'arriveOrder',
-    endOrder: 'endOrder',
     acceptService: 'acceptService',
     acceptCancel: 'acceptCancel',
     orderCanceled: 'orderCanceled',
