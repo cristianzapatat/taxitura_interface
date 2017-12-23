@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "PORT=3001 forever start index.js",
-    "start_staging": "PORT=3002 forever start index.js",
-    "start_windows": "set PORT=3002 && forever start index.js",
+    "staging": "PORT=3002 forever start index.js",
+    "windows": "set PORT=3002 && forever start index.js",
     "dev": "nodemon index.js",
     "stop": "forever stopall"
   },
