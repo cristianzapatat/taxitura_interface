@@ -1,5 +1,10 @@
 # taxitura_interface
 
+## Pre-instalación
+Antes de ejecutar x comando de en su consola o terminal debe ejecutar el siguiente comando.
+* **npm install -g forever**
+
+## Ejecución
 Para ejecutar en Linux o Mac
 * **npm start**
 * *ó*

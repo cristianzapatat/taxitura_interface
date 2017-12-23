@@ -2,14 +2,14 @@
   "name": "taxitura_interface",
   "version": "0.0.1",
   "description": "Interfaz encarga da la comunicación entre los bots y app-user con las app-taxi, además de comunicarse para persistir la información con el servidor.",
-  "main": "index.js",
+  "main": "interface.js",
   "scripts": {
-    "start": "PORT=3001 forever start index.js",
-    "staging": "PORT=3002 forever start index.js",
-    "windows": "set PORT=3002 && forever start index.js",
-    "classic": "node index.js",
-    "dev": "nodemon index.js",
-    "stop": "forever stopall"
+    "start": "PORT=3001 forever start interface.js",
+    "staging": "PORT=3002 forever start interface.js",
+    "windows": "set PORT=3002 && forever start interface.js",
+    "classic": "node interface.js",
+    "dev": "nodemon interface.js",
+    "stop": "forever stop interface.js"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,7 @@
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
     "express-handlebars": "^3.0.0",
+    "forever": "^0.15.3",
     "hbs": "^4.0.1",
     "node-fetch": "^1.7.3",
     "socket.io": "^1.7.4"
