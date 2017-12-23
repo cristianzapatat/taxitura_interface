@@ -4,8 +4,9 @@
   "description": "servidor",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "forever start app.js",
+    "dev": "nodemon index.js",
+    "stop": "forever stopall"
   },
   "repository": {
     "type": "git",
