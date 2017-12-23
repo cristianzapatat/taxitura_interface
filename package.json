@@ -7,8 +7,8 @@
     "start": "PORT=3001 forever start --uid taxitura_interface --append true index.js",
     "windows": "set PORT=3001 && forever start --uid taxitura_interface --append true index.js",
     "stop": "forever stop --uid taxitura_interface -o algo.txt index.js",
-    "staging": "PORT=3002 forever start --uid taxitura_interface_staging staging.js",
-    "stagingwindows": "set PORT=3002 && forever start --uid taxitura_interface staging.js",
+    "staging": "PORT=3002 forever start --uid taxitura_interface_staging --append true staging.js",
+    "stagingwindows": "set PORT=3002 && forever start --uid taxitura_interface --append true staging.js",
     "stopstaging": "forever stop --uid taxitura_interface_staging staging.js",
     "classic": "node index.js",
     "dev": "nodemon index.js"
