@@ -1,19 +1,24 @@
 {
-  "name": "servidor",
-  "version": "1.0.1",
-  "description": "servidor",
+  "name": "taxitura_interface",
+  "version": "0.0.1",
+  "description": "Interfaz encarga da la comunicación entre los bots y app-user con las app-taxi, además de comunicarse para persistir la información con el servidor.",
   "main": "index.js",
   "scripts": {
-    "start": "forever start app.js",
-    "dev": "nodemon index.js",
+    "start": "PORT=3001 forever start .",
+    "start_staging": "PORT=3002 forever start .",
+    "start_windows": "set PORT=3002 && forever start .",
+    "dev": "nodemon .",
     "stop": "forever stopall"
   },
   "repository": {
     "type": "git",
-    "url": "none"
+    "url": "https://github.com/cristianzapatat/taxitura_interface"
   },
   "keywords": [
-    "taxitura"
+    "taxitura",
+    "interface",
+    "interface",
+    "taxi"
   ],
   "author": "Taxitura Company",
   "license": "ISC",
@@ -21,6 +26,7 @@
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
     "express-handlebars": "^3.0.0",
+    "forever": "^0.15.3",
     "hbs": "^4.0.1",
     "node-fetch": "^1.7.3",
     "socket.io": "^1.7.4"
