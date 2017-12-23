@@ -4,10 +4,10 @@
   "description": "Interfaz encarga da la comunicación entre los bots y app-user con las app-taxi, además de comunicarse para persistir la información con el servidor.",
   "main": "index.js",
   "scripts": {
-    "start": "PORT=3001 forever start .",
-    "start_staging": "PORT=3002 forever start .",
-    "start_windows": "set PORT=3002 && forever start .",
-    "dev": "nodemon .",
+    "start": "PORT=3001 forever start index.js",
+    "start_staging": "PORT=3002 forever start index.js",
+    "start_windows": "set PORT=3002 && forever start index.js",
+    "dev": "nodemon index.js",
     "stop": "forever stopall"
   },
   "repository": {
