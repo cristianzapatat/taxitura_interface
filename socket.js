@@ -5,10 +5,7 @@ const _kts = require('./util/kts')
 const _url = require('./util/url')
 const _fns = require('./util/functions')
 
-const ServiceClass = require('./class/service')
-const Service = new ServiceClass()
-
-module.exports = (socket, io) => {
+module.exports = (socket, io, Queue, Service) => {
   _global.clients[socket.id] = socket
 
   // Callback que elimina un socket de la lista cuando este se desconecta
@@ -30,18 +27,9 @@ module.exports = (socket, io) => {
     }
   })
 
-  // Callback para crear y distribuir un servicio
+  // Callback que encola los nuevos servicios que llegan por socket.
   socket.on(_kts.socket.createService, order => {
-    fetch(_url.getGeocoding(order.position_user))
-      .then(result => {
-        return result.json()
-      })
-      .then(json => {
-        order = Service.create(order, json.results[0].formatted_address, _kts.json.facebook)
-        _global.orders[order.service.id] = order
-        io.emit(_kts.socket.receiveService, order)
-      })
-      .catch(err => {})
+    Queue.sendMessageService(JSON.stringify(order))
   })
 
   // Callback que procesa el servicio (acepta, modifica, finaliza)
@@ -50,6 +38,7 @@ module.exports = (socket, io) => {
     if (order.action === _kts.action.accept) {
       if (_global.orders[order.service.id]) {
         if (_global.orders[order.service.id].action === _kts.action.order) {
+          order = Service.addTime(order, _kts.json.accept)
           order = Service.addChanel(order, socket.id)
           _global.orders[order.service.id] = order
           _global.ordersInForce[order.user.id] = order
@@ -63,6 +52,7 @@ module.exports = (socket, io) => {
     // el taxita llega donde el usuario
     } else if (order.action === _kts.action.arrive) {
       if (_global.orders[order.service.id].action === _kts.action.accept) {
+        order = Service.addTime(order, _kts.json.arrive)
         _global.orders[order.service.id] = order
         _global.ordersInForce[order.user.id] = order
         _fns.getBot().emit(_kts.socket.responseOrder, order)
@@ -71,6 +61,7 @@ module.exports = (socket, io) => {
     // El pasajero abordo el taxi según información del taxista
     } else if (order.action === _kts.action.aboard) {
       if (_global.orders[order.service.id].action === _kts.action.arrive) {
+        order = Service.addTime(order, _kts.json.aboard)
         _global.orders[order.service.id] = order
         _global.ordersInForce[order.user.id] = order
         _fns.getBot().emit(_kts.socket.responseOrder, order)
@@ -79,6 +70,7 @@ module.exports = (socket, io) => {
     // fin del servio
     } else if (order.action === _kts.action.end) {
       if (_global.orders[order.service.id].action === _kts.action.aboard) {
+        order = Service.addTime(order, _kts.json.end)
         _global.finishedOrders[order.service.id] = order
         delete _global.orders[order.service.id]
         delete _global.ordersInForce[order.user.id]
@@ -92,6 +84,7 @@ module.exports = (socket, io) => {
   socket.on(_kts.socket.acceptCancel, order => {
     if (order.action === _kts.action.accept) {
       if (_global.orders[order.service.id].action === _kts.action.order) {
+        order = Service.addTime(order, _kts.json.accept)
         order = Service.addChanel(order, socket.id)
         _global.orders[order.service.id] = order
         _global.ordersInForce[order.user.id] = order
@@ -173,7 +166,7 @@ module.exports = (socket, io) => {
     if (order) {
       if (order.user.id === quality.user.id) {
         if (!order.quality) {
-          _global.finishedOrders[quality.service.id][_kts.json.quality] = quality
+          _global.finishedOrders[quality.service.id][_kts.json.quality] = quality.quality
           message = 'Gracias por calificar el servicio'
         } else {
           message = 'El servicio ya recibio una calificación previa'
