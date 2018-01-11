@@ -9,9 +9,9 @@ class Service {
     let date = new Date()
     order[_kts.json.service] = {
       id: date.getTime(),
-      origin: origin || _kts.json.withoutOrigin,
-      date_creation: date
+      origin: origin || _kts.json.withoutOrigin
     }
+    order.date[_kts.json.interface] = date
     let pos = address.split(_kts.operators.coma)
     order.position_user[_kts.json.addressFull] = address
     order.position_user[_kts.json.address] = `${pos[0]}, ${pos[1]}`
@@ -20,6 +20,11 @@ class Service {
 
   addChanel (order, channel) {
     order[_kts.json.channel] = channel
+    return order
+  }
+
+  addTime (order, nameTime) {
+    order.date[nameTime] = new Date()
     return order
   }
 

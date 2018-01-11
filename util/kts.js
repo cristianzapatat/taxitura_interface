@@ -47,7 +47,14 @@ module.exports = {
     address: 'address',
     quality: 'quality',
     channel: 'channel',
-    onMyWay: 'onMyWay'
+    onMyWay: 'onMyWay',
+    interface: 'interface',
+    try: 'try',
+    accept: 'accept',
+    arrive: 'arrive',
+    aboard: 'aboard',
+    end: 'end',
+    cancel: 'cancel'
   },
   operators: {
     coma: ','
