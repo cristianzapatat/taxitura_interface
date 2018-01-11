@@ -4,13 +4,7 @@
   "description": "Interfaz encarga da la comunicación entre los bots y app-user con las app-taxi, además de comunicarse para persistir la información con el servidor.",
   "main": "index.js",
   "scripts": {
-    "start": "PORT=3001 forever start --uid taxitura_interface --append true index.js",
-    "windows": "set PORT=3001 && forever start --uid taxitura_interface --append true index.js",
-    "stop": "forever stop --uid taxitura_interface index.js",
-    "staging": "PORT=3002 forever start --uid taxitura_interface_staging --append true staging.js",
-    "stagingwindows": "set PORT=3002 && forever start --uid taxitura_interface --append true staging.js",
-    "stopstaging": "forever stop --uid taxitura_interface_staging staging.js",
-    "classic": "node index.js",
+    "start": "node index.js",
     "dev": "nodemon index.js"
   },
   "repository": {
@@ -29,7 +23,6 @@
     "body-parser": "^1.18.2",
     "express": "^4.16.2",
     "express-handlebars": "^3.0.0",
-    "forever": "^0.15.3",
     "hbs": "^4.0.1",
     "node-fetch": "^1.7.3",
     "socket.io": "^1.7.4",
