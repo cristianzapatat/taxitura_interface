@@ -1,9 +1,44 @@
+/* eslint handle-callback-err: ["error", "error"] */
 const fetch = require('node-fetch')
 
 var _global = require('./util/global')
 const _kts = require('./util/kts')
 const _url = require('./util/url')
 const _fns = require('./util/functions')
+
+function processResponseService (order, Service, socket, nameDate) {
+  order = Service.addTime(order, nameDate)
+  updateService(order, ord => {
+    actionResponseService(ord, socket)
+  }, (order, err) => { // TODO determinar que hacer en caso de error
+  })
+}
+
+function actionResponseService (order, socket, poss) {
+  _fns.getBot().emit(_kts.socket.responseOrder, order)
+  if (socket) {
+    socket.emit(_kts.socket.acceptService, order)
+    _fns.deleteServiceForAccept(order.service.id)
+  }
+  _fns.savePositionCab(order.cabman.id, order.position_cabman)
+}
+
+function updateService (order, resolve, fail) {
+  fetch(`${_url.urlServices}/${order.service.id}`, _fns.getInit(order, _kts.method.put))
+    .then(response => {
+      if (response.status >= 200 && response.status <= 299) {
+        return response.json()
+      } else {
+        throw response.status
+      }
+    })
+    .then(json => {
+      resolve(json.info)
+    })
+    .catch(err => {
+      fail(order, err)
+    })
+}
 
 module.exports = (socket, io, Queue, Service) => {
   _global.clients[socket.id] = socket
@@ -28,56 +63,63 @@ module.exports = (socket, io, Queue, Service) => {
   })
 
   // Callback que encola los nuevos servicios que llegan por socket.
-  socket.on(_kts.socket.createService, order => {
-    Queue.sendMessageService(JSON.stringify(order))
+  socket.on(_kts.socket.createService, async (order) => {
+    fetch(_url.lastServiceUser(order.user.id))
+      .then(response => {
+        if (response.status >= 200 && response.status <= 299) {
+          return response.json()
+        } else {
+          throw response.status
+        }
+      })
+      .then(json => {
+        if (json) {
+          if (json.length === 0) {
+            order.date[_kts.json.queue] = new Date()
+            Queue.saveServiceQueue(JSON.stringify(order))
+            _fns.getBot().emit(_kts.socket.orderProcessing, order)
+          } else {
+            _fns.getBot().emit(_kts.socket.orderInProcess, json[0].info)
+          }
+        } else {
+          _fns.getBot().emit(_kts.socket.notSentPetition, order)
+        }
+      })
+      .catch(err => {
+        _fns.getBot().emit(_kts.socket.notSentPetition, order)
+      })
   })
 
   // Callback que procesa el servicio (acepta, modifica, finaliza)
   socket.on(_kts.socket.responseService, order => {
-    // Aceptar el servio
-    if (order.action === _kts.action.accept) {
-      if (_global.orders[order.service.id]) {
-        if (_global.orders[order.service.id].action === _kts.action.order) {
-          order = Service.addTime(order, _kts.json.accept)
-          order = Service.addChanel(order, socket.id)
-          _global.orders[order.service.id] = order
-          _global.ordersInForce[order.user.id] = order
-          _global.ordersForCabman[order.cabman.id] = order.user.id
-          _fns.getBot().emit(_kts.socket.responseOrder, order)
-          socket.emit(_kts.socket.acceptService, order)
-          _fns.savePositionCab(order.cabman.id, order.position_cabman)
-          _fns.deleteServiceForAccept(order.service.id)
-        } else { socket.emit(_kts.socket.acceptService, null) }
-      } else { socket.emit(_kts.socket.acceptService, null) }
-    // el taxita llega donde el usuario
-    } else if (order.action === _kts.action.arrive) {
-      if (_global.orders[order.service.id].action === _kts.action.accept) {
-        order = Service.addTime(order, _kts.json.arrive)
-        _global.orders[order.service.id] = order
-        _global.ordersInForce[order.user.id] = order
-        _fns.getBot().emit(_kts.socket.responseOrder, order)
-        _fns.savePositionCab(order.cabman.id, order.position_cabman)
-      }
-    // El pasajero abordo el taxi según información del taxista
-    } else if (order.action === _kts.action.aboard) {
-      if (_global.orders[order.service.id].action === _kts.action.arrive) {
-        order = Service.addTime(order, _kts.json.aboard)
-        _global.orders[order.service.id] = order
-        _global.ordersInForce[order.user.id] = order
-        _fns.getBot().emit(_kts.socket.responseOrder, order)
-        _fns.savePositionCab(order.cabman.id, order.position_cabman)
-      }
-    // fin del servio
-    } else if (order.action === _kts.action.end) {
-      if (_global.orders[order.service.id].action === _kts.action.aboard) {
-        order = Service.addTime(order, _kts.json.end)
-        _global.finishedOrders[order.service.id] = order
-        delete _global.orders[order.service.id]
-        delete _global.ordersInForce[order.user.id]
-        _fns.getBot().emit(_kts.socket.responseOrder, order)
-        _fns.savePositionCab(order.cabman.id, order.position_cabman)
-      }
-    }
+    fetch(`${_url.urlServices}/${order.service.id}`)
+      .then(response => {
+        return response.json()
+      })
+      .then(json => {
+        let orderAux = json.info
+        if (orderAux) {
+          order.date = orderAux.date
+          if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) { // Aceptar el servio
+            order = Service.addChanel(order, socket.id)
+            processResponseService(order, Service, socket, _kts.json.accept)
+          } else if (order.action === _kts.action.arrive && orderAux.action === _kts.action.accept) { // el taxita llega donde el usuario
+            processResponseService(order, Service, null, _kts.json.arrive)
+          } else if (order.action === _kts.action.aboard && orderAux.action === _kts.action.arrive) { // El pasajero abordo el taxi según información del taxista
+            processResponseService(order, Service, null, _kts.json.aboard)
+          } else if (order.action === _kts.action.end && orderAux.action === _kts.action.aboard) { // fin del servio
+            processResponseService(order, Service, null, _kts.json.end)
+          } else {
+            socket.emit(_kts.socket.acceptService, null)
+          }
+        } else {
+          socket.emit(_kts.socket.acceptService, null)
+        }
+      })
+      .catch(err => {
+        // TODO validar el error de consulta del servicio
+        console.log('Error responseService', err)
+      })
   })
 
   // Callback para aceptar un servicio que fue previamente cancelado por el taxista
@@ -160,95 +202,158 @@ module.exports = (socket, io, Queue, Service) => {
   })
 
   // callback usado para añadir una calificación a un servicio
-  socket.on(_kts.socket.quality, quality => {
-    let order = _global.finishedOrders[quality.service.id]
-    let message = ''
-    if (order) {
-      if (order.user.id === quality.user.id) {
-        if (!order.quality) {
-          _global.finishedOrders[quality.service.id][_kts.json.quality] = quality.quality
-          message = 'Gracias por calificar el servicio'
+  socket.on(_kts.socket.quality, data => {
+    fetch(`${_url.urlServices}/${data.service.id}`)
+      .then(response => {
+        if (response.status >= 200 && response.status <= 299) {
+          return response.json()
         } else {
-          message = 'El servicio ya recibio una calificación previa'
+          throw response.status
         }
-      } else {
-        message = 'El servicio que está calificando pertenece a otro usuario'
-      }
-    } else {
-      message = 'El servicio no está disponible para calificar'
-    }
-    let response = {
-      user: { id: quality.user.id },
-      message
-    }
-    socket.emit(_kts.socket.quality, response)
+      })
+      .then(json => {
+        let order = json.info
+        let message = ''
+        if (order) {
+          if (order.user.id === data.user.id) {
+            if (!order.quality) {
+              order[_kts.json.quality] = data.quality
+              updateService(order, ord => {
+                socket.emit(_kts.socket.quality, {
+                  user: ord.user,
+                  message: 'Gracias por calificar el servicio'
+                })
+              }, (order, err) => {
+                socket.emit(_kts.socket.errorFetch, data.user)
+              })
+            } else {
+              message = 'El servicio ya recibio una calificación previa'
+            }
+          } else {
+            message = 'El servicio que está calificando pertenece a otro usuario'
+          }
+        } else {
+          message = 'El servicio no está disponible para calificar'
+        }
+        if (message.length > 0) {
+          socket.emit(_kts.socket.quality, {
+            user: data.user,
+            message
+          })
+        }
+      })
+      .catch(err => {
+        socket.emit(_kts.socket.errorFetch, data.user)
+      })
   })
 
   // Callback para obtener la posición del taxista por parte un usurio
   socket.on(_kts.socket.getPositionBot, user => {
     if (user) {
-      let service = _global.ordersInForce[user.id]
-      if (service) {
-        let positions = _global.positionsCab[service.cabman.id]
-        if (positions) {
-          if (positions.length >= 0) {
-            let position = positions[positions.length - 1]
-            fetch(_url.getDistanceMatrix(position, service.position_user))
-              .then(res => {
-                return res.json()
-              })
-              .then(json => {
-                _fns.getBot().emit(_kts.socket.returnPositionBot, {
-                  status: true,
-                  service: service.service,
-                  position_cabman: {
-                    distance: json.rows[0].elements[0].distance.value,
-                    time: json.rows[0].elements[0].duration.value,
-                    latitude: position.latitude,
-                    longitude: position.longitude
-                  },
-                  user: service.user
-                })
-              })
+      fetch(_url.lastServiceUser(user.id))
+        .then(response => {
+          if (response.status >= 200 && response.status <= 299) {
+            return response.json()
           } else {
-            socket.emit(_kts.socket.returnPositionBot, {status: false, user: user})
+            throw response.status
           }
-        } else {
-          socket.emit(_kts.socket.returnPositionBot, {status: false, user: user})
-        }
-      } else {
-        let state = Service.searchServiceForUserOnOrders(user.id) !== null
-        socket.emit(_kts.socket.returnPositionBot, {status: null, case: state, user: user})
-      }
+        })
+        .then(json => {
+          if (json) {
+            if (json.length > 0) {
+              let order = json[0].info
+              if (order.action === _kts.action.order) {
+                socket.emit(_kts.socket.returnPositionBot, {status: null, case: true, user: user})
+              } else if (order.action === _kts.action.accept || _kts.action.arrive || _kts.action.aboard) {
+                let positions = _global.positionsCab[order.cabman.id]
+                if (positions) {
+                  if (positions.length >= 0) {
+                    let position = positions[positions.length - 1]
+                    fetch(_url.getDistanceMatrix(position, order.position_user))
+                      .then(res => {
+                        return res.json()
+                      })
+                      .then(json => {
+                        _fns.getBot().emit(_kts.socket.returnPositionBot, {
+                          status: true,
+                          service: order.service,
+                          position_cabman: {
+                            distance: json.rows[0].elements[0].distance.value,
+                            time: json.rows[0].elements[0].duration.value,
+                            latitude: position.latitude,
+                            longitude: position.longitude
+                          },
+                          user: order.user
+                        })
+                      })
+                      .catch(err => {
+                        socket.emit(_kts.socket.errorFetch, user)
+                      })
+                  } else {
+                    socket.emit(_kts.socket.returnPositionBot, {status: false, user: user})
+                  }
+                } else {
+                  socket.emit(_kts.socket.returnPositionBot, {status: false, user: user})
+                }
+              }
+            } else {
+              socket.emit(_kts.socket.returnPositionBot, {status: null, case: false, user: user})
+            }
+          } else {
+            socket.emit(_kts.socket.returnPositionBot, {status: null, case: false, user: user})
+          }
+        })
+        .catch(err => {
+          socket.emit(_kts.socket.errorFetch, user)
+        })
     }
   })
 
   // Callback para indicar al taxista que su usuario va en camino
   socket.on(_kts.socket.onMyWay, data => {
-    let order = _global.ordersInForce[data.user.id]
-    if (!order) {
-      socket.emit(_kts.socket.notFoundService, data)
-    } else {
-      if (order.channel) {
-        if (order.action === _kts.action.arrive) {
-          let sock = _global.clients[order.channel]
-          if (sock) {
-            if (!order.onMyWay) {
-              order[_kts.json.onMyWay] = []
-              order.onMyWay.push(new Date().getTime())
-              sock.emit(_kts.socket.onMyWay, data)
-            } else {
-              let time = new Date()
-              if ((time.getTime() - order.onMyWay[order.onMyWay.length - 1]) > _kts.time.onMyWay) {
-                order.onMyWay.push(time.getTime())
-                sock.emit(_kts.socket.onMyWay, data)
+    fetch(`${_url.urlServices}/${data.service.id}`)
+      .then(response => {
+        if (response.status >= 200 && response.status <= 299) {
+          return response.json()
+        } else {
+          throw response.status
+        }
+      })
+      .then(json => {
+        if (json) {
+          let order = json.info
+          if (order.channel) {
+            if (order.action === _kts.action.arrive) {
+              let sock = _global.clients[order.channel]
+              let update = false
+              if (sock) {
+                if (!order.onMyWay) {
+                  order[_kts.json.onMyWay] = []
+                  order.onMyWay.push(new Date().getTime())
+                  update = true
+                } else {
+                  let time = new Date()
+                  if ((time.getTime() - order.onMyWay[order.onMyWay.length - 1]) > _kts.time.onMyWay) {
+                    order.onMyWay.push(time.getTime())
+                    update = true
+                  }
+                }
+                if (update) {
+                  updateService(order, ord => {
+                    sock.emit(_kts.socket.onMyWay, data)
+                  }, (order, err) => {
+                    socket.emit(_kts.socket.errorFetch, data.user)
+                  })
+                }
               }
             }
-            _global.orders[order.service.id] = order
-            _global.ordersInForce[order.user.id] = order
           }
+        } else {
+          socket.emit(_kts.socket.notFoundService, data)
         }
-      }
-    }
+      })
+      .catch(err => {
+        socket.emit(_kts.socket.errorFetch, data.user)
+      })
   })
 }

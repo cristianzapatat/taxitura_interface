@@ -11,6 +11,14 @@ class Queue {
     frame.end()
   }
 
+  saveServiceQueue (message) {
+    this.sendMessage(message, _config.saveServiceQueue)
+  }
+
+  saveServiceQueueError (message) {
+    this.sendMessage(message, _config.saveServiceQueueError)
+  }
+
   sendMessageService (message) {
     this.sendMessage(message, _config.sendMessageQueue)
   }

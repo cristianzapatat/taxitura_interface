@@ -12,13 +12,11 @@ router.get('/gt', (req, res) => {
     clients: Object.keys(_global.clients).length,
     cant: {
       orders: Object.keys(_global.orders).length,
-      ordersInForce: Object.keys(_global.ordersInForce).length,
-      finishedOrders: Object.keys(_global.finishedOrders).length
+      ordersInForce: Object.keys(_global.ordersInForce).length
     },
     positionsCab: _global.positionsCab,
     orders: _global.orders,
     ordersInForce: _global.ordersInForce,
-    finishedOrders: _global.finishedOrders,
     pendingOrders: _global.pendingOrders,
     canceledOrders: _global.canceledOrders
   })
@@ -27,7 +25,6 @@ router.get('/gt', (req, res) => {
 router.get('/dlt', (req, res) => {
   _global.positionsCab = {}
   _global.orders = {}
-  _global.finishedOrders = {}
   _global.ordersInForce = {}
   _global.pendingOrders = {}
   _global.canceledOrders = {}

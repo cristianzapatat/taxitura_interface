@@ -2,6 +2,9 @@
 File that contains the constants of the project
 */
 module.exports = {
+  conf: {
+    utf8: 'UTF-8'
+  },
   config: {
     views: 'views',
     hbsPoint: '.hbs',
@@ -30,14 +33,21 @@ module.exports = {
     returnPositionBot: 'returnPositionBot',
     onMyWay: 'onMyWay',
     notFoundService: 'notFoundService',
-    disconnect: 'disconnect'
+    notFoundCabman: 'notFoundCabman',
+    notSentPetition: 'notSentPetition',
+    errorMessageQueue: 'errorMessageQueue',
+    orderInProcess: 'orderInProcess',
+    orderProcessing: 'orderProcessing',
+    disconnect: 'disconnect',
+    errorFetch: 'errorFetch'
   },
   action: {
     order: 'order',
     accept: 'accept',
     arrive: 'arrive',
     aboard: 'aboard',
-    end: 'end'
+    end: 'end',
+    cancel: 'cancel'
   },
   json: {
     service: 'service',
@@ -49,17 +59,32 @@ module.exports = {
     channel: 'channel',
     onMyWay: 'onMyWay',
     interface: 'interface',
+    queue: 'queue',
     try: 'try',
     accept: 'accept',
     arrive: 'arrive',
     aboard: 'aboard',
     end: 'end',
-    cancel: 'cancel'
+    cancel: 'cancel',
+    err: 'error'
   },
   operators: {
     coma: ','
   },
   time: {
     onMyWay: 180000
+  },
+  method: {
+    get: 'GET',
+    put: 'PUT',
+    post: 'POST'
+  },
+  header: {
+    contentType: 'Content-Type',
+    multiparFormData: 'multipart/form-data',
+    applicationJson: 'application/json'
+  },
+  body: {
+    info: 'info'
   }
 }

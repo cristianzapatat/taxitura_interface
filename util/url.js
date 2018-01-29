@@ -1,5 +1,8 @@
+const _config = require('../config')
+
 let keyDistanceMatrix = 'AIzaSyACBAr9IbMFB22u2IVLlgdI6LHRJOI0P74'
 let keyGeocoding = 'AIzaSyC4PiNYLHiaDRYU63MQhb698_17WaSVCZI' // Google Maps Geocodign API
+let urlServices = `${_config.urlServer}/api/v1/services`
 
 module.exports = {
   keyDistanceMatrix,
@@ -14,5 +17,9 @@ module.exports = {
   getGeocoding: (pos) => {
     return `https://maps.google.com/maps/api/geocode/json?
       key=${keyGeocoding}&latlng=${encodeURI(`${pos.latitude},${pos.longitude}`)}`
+  },
+  urlServices,
+  lastServiceUser: (idUser) => {
+    return `${urlServices}?filter_type=last_user&filter_params=${idUser}`
   }
 }

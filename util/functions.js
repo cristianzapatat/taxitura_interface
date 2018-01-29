@@ -1,9 +1,19 @@
 var _global = require('./global')
+const _kts = require('./kts')
 
 module.exports = {
   getBot: () => {
     for (let index in _global.bots) {
       return _global.bots[index]
+    }
+  },
+  getInit: (data, method) => {
+    return {
+      method: method,
+      headers: { 'Content-Type': _kts.header.applicationJson },
+      body: JSON.stringify({
+        'info': JSON.stringify(data)
+      })
     }
   },
   savePositionCab: async (id, position) => {
@@ -28,6 +38,6 @@ module.exports = {
     })()
   },
   redirectDefault (res) {
-    res.redirect('https://www.facebook.com/taxitura/')
+    res.redirect('http://www.taxitura.com/')
   }
 }

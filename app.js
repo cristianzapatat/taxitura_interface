@@ -10,7 +10,7 @@ const _kts = require('./util/kts')
 const _fns = require('./util/functions')
 const _config = require('./config')
 
-const ServiceClass = require('./class/service')
+const ServiceClass = require('./class/Service')
 const Service = new ServiceClass()
 
 const QueueClass = require('./class/Queue')
