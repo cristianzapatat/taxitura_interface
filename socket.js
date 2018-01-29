@@ -100,6 +100,7 @@ module.exports = (socket, io, Queue, Service) => {
         let orderAux = json.info
         if (orderAux) {
           order.date = orderAux.date
+          if (orderAux.onMyWay) order[_kts.json.onMyWay] = orderAux.onMyWay
           if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) { // Aceptar el servio
             order = Service.addChanel(order, socket.id)
             processResponseService(order, Service, socket, _kts.json.accept)
@@ -212,9 +213,9 @@ module.exports = (socket, io, Queue, Service) => {
         }
       })
       .then(json => {
-        let order = json.info
         let message = ''
-        if (order) {
+        if (json) {
+          let order = json.info
           if (order.user.id === data.user.id) {
             if (!order.quality) {
               order[_kts.json.quality] = data.quality
