@@ -156,7 +156,7 @@
     jQuery('#icon').attr('src', `${urlBase}/img/logo/png`)
     function updatePosition () {
       idSet = setInterval(() => {
-        jQuery.post(`${urlBase}/get_current_position_cab/${data.user.id}`, (data) => {
+        jQuery.get(`${urlBase}/get_current_position_cab/${data.user.id}`, (data) => {
           if (data) {
             if (data.status) {
               if (data.positions) {

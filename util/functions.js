@@ -1,4 +1,5 @@
 var _global = require('./global')
+const _config = require('../config')
 const _kts = require('./kts')
 
 module.exports = {
@@ -38,6 +39,6 @@ module.exports = {
     })()
   },
   redirectDefault (res) {
-    res.redirect('http://www.taxitura.com/')
+    res.redirect(_config.urlServer)
   }
 }
