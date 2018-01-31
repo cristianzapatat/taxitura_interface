@@ -66,7 +66,8 @@ module.exports = {
     aboard: 'aboard',
     end: 'end',
     cancel: 'cancel',
-    err: 'error'
+    err: 'error',
+    date: 'date'
   },
   operators: {
     coma: ','

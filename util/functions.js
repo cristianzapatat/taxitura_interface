@@ -21,6 +21,7 @@ module.exports = {
     if (!_global.positionsCab[id]) {
       _global.positionsCab[id] = []
     }
+    data[_kts.json.date] = new Date()
     _global.positionsCab[id].push(data)
   },
   deleteServiceForAccept: async (idService) => {

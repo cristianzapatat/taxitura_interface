@@ -20,7 +20,15 @@ function actionResponseService (order, socket) {
     socket.emit(_kts.socket.acceptService, order)
     _fns.deleteServiceForAccept(order.service.id)
   }
-  _fns.savePositionCab(order.cabman.id, order.position_cabman)
+  _fns.savePositionCab(order.cabman.id, {
+    id: order.cabman.id,
+    service: order.service.id,
+    action: order.action,
+    position: {
+      latitude: order.position_cabman.latitude,
+      longitude: order.position_cabman.longitude
+    }
+  })
 }
 
 function updateService (order, resolve, fail) {
