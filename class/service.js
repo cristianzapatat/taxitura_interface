@@ -1,4 +1,3 @@
-const _global = require('../util/global')
 const _kts = require('../util/kts')
 
 class Service {

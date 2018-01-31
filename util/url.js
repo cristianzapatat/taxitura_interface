@@ -21,5 +21,8 @@ module.exports = {
   urlServices,
   lastServiceUser: (idUser) => {
     return `${urlServices}?filter_type=last_user&filter_params=${idUser}`
+  },
+  lastServiceDriver: (idDriver) => {
+    return `${urlServices}?filter_type=last_driver&filter_params=${idDriver}`
   }
 }

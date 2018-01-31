@@ -34,7 +34,7 @@ stompit.connect({host: _config.hostQueue, port: _config.portQueue}, (err, client
       require('./socket')(socket, io, Queue, Service)
     })
     require('./queue')(Queue, Service, io)
-  } else {
+  } else { // TODO definir que hacer
     console.log(err)
   }
 })

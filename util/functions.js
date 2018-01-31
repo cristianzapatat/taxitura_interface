@@ -17,24 +17,17 @@ module.exports = {
       })
     }
   },
-  savePositionCab: async (id, position) => {
+  savePositionCab: async (id, data) => {
     if (!_global.positionsCab[id]) {
       _global.positionsCab[id] = []
     }
-    _global.positionsCab[id].push({
-      latitude: position.latitude,
-      longitude: position.longitude
-    })
+    _global.positionsCab[id].push(data)
   },
   deleteServiceForAccept: async (idService) => {
     (async () => {
       for (let index in _global.canceledOrders) {
-        delete _global.canceledOrders[index][idService]
-      }
-    })();
-    (async () => {
-      for (let index in _global.pendingOrders) {
-        delete _global.pendingOrders[index][idService]
+        let pos = _global.canceledOrders[index].indexOf(idService)
+        if (pos >= 0) _global.canceledOrders[index].splice(pos, 1)
       }
     })()
   },

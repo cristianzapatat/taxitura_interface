@@ -69,7 +69,7 @@ function catchSend (order, Queue, err) {
   }
 }
 
-module.exports = (Queue, Service, io) => {
+module.exports = (Queue, Service, io) => { // TODO definir el caso 'else'
   Queue.subscribe(_config.saveServiceQueue, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {

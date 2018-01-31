@@ -13,26 +13,8 @@ router.get('/gt', (req, res) => {
   res.status(200).send({
     bots: Object.keys(_global.bots).length,
     clients: Object.keys(_global.clients).length,
-    cant: {
-      orders: Object.keys(_global.orders).length,
-      ordersInForce: Object.keys(_global.ordersInForce).length
-    },
     positionsCab: _global.positionsCab,
-    orders: _global.orders,
-    ordersInForce: _global.ordersInForce,
-    pendingOrders: _global.pendingOrders,
     canceledOrders: _global.canceledOrders
-  })
-})
-
-router.get('/dlt', (req, res) => {
-  _global.positionsCab = {}
-  _global.orders = {}
-  _global.ordersInForce = {}
-  _global.pendingOrders = {}
-  _global.canceledOrders = {}
-  res.status(200).send({
-    status: 'OK'
   })
 })
 
@@ -149,20 +131,20 @@ router.get('/json/:name', (req, res) => {
   res.end(json)
 })
 
-router.get('/get_services_canceled/:id', (req, res) => {
-  let list = []
-  if (req.params.id) {
-    let servicesCanceled = _global.canceledOrders[req.params.id]
-    if (servicesCanceled) {
-      let cant = Object.keys(servicesCanceled).length
-      if (cant > 0) {
-        for (let index in servicesCanceled) {
-          list.push(servicesCanceled[index])
-        }
-      }
-    }
-  }
-  res.status(200).send(list)
+router.get('/get_services_canceled/:id', (req, res) => { // TODO consumir servicio del API
+  // let list = []
+  // if (req.params.id) {
+  //   let servicesCanceled = _global.canceledOrders[req.params.id]
+  //   if (servicesCanceled) {
+  //     let cant = Object.keys(servicesCanceled).length
+  //     if (cant > 0) {
+  //       for (let index in servicesCanceled) {
+  //         list.push(servicesCanceled[index])
+  //       }
+  //     }
+  //   }
+  // }
+  // res.status(200).send(list)
 })
 
 module.exports = router
