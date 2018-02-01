@@ -24,5 +24,8 @@ module.exports = {
   },
   lastServiceDriver: (idDriver) => {
     return `${urlServices}?filter_type=last_driver&filter_params=${idDriver}`
+  },
+  multipleServices: (ids) => {
+    return `${urlServices}?filter_type=multiple_services&filter_params=${ids.toString()}`
   }
 }

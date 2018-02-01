@@ -182,7 +182,7 @@ module.exports = (socket, io, Queue, Service) => {
 
   // Callback para validar si un taxista tiene un servicio en curso
   socket.on(_kts.socket.serviceInMemory, idDriver => {
-    fetch(_url.lastServiceUser(idDriver))
+    fetch(_url.lastServiceDriver(idDriver))
       .then(response => {
         if (response.status >= 200 && response.status <= 299) {
           return response.json()
@@ -193,11 +193,12 @@ module.exports = (socket, io, Queue, Service) => {
       .then(json => {
         if (json) {
           if (json.length > 0) {
-            let order = json[0].length
+            let order = json[0].info
             order = Service.addChanel(order, socket.id)
             updateService(order, ord => {
               socket.emit(_kts.socket.isServiceInMemory, ord)
             }, (order, err) => { // TODO determinar que hacer en caso de error
+              console.log('serviceInMemory', err)
             })
           } else {
             socket.emit(_kts.socket.isServiceInMemory, null)
@@ -207,6 +208,7 @@ module.exports = (socket, io, Queue, Service) => {
         }
       })
       .catch(err => { // TODO definir que hacer
+        console.log('serviceInMemory serviceInMemory', err)
       })
   })
 
@@ -283,35 +285,30 @@ module.exports = (socket, io, Queue, Service) => {
                 socket.emit(_kts.socket.returnPositionBot, {status: null, case: true, user: user})
               } else if (order.action === _kts.action.accept || _kts.action.arrive || _kts.action.aboard) {
                 let positions = _global.positionsCab[order.cabman.id]
-                if (positions) {
-                  if (positions.length >= 0) {
-                    let position = positions[positions.length - 1]
-                    fetch(_url.getDistanceMatrix(position, order.position_user))
-                      .then(res => {
-                        return res.json()
-                      })
-                      .then(json => {
-                        _fns.getBot().emit(_kts.socket.returnPositionBot, {
-                          status: true,
-                          service: order.service,
-                          position_cabman: {
-                            distance: json.rows[0].elements[0].distance.value,
-                            time: json.rows[0].elements[0].duration.value,
-                            latitude: position.latitude,
-                            longitude: position.longitude
-                          },
-                          user: order.user
-                        })
-                      })
-                      .catch(err => {
-                        socket.emit(_kts.socket.errorFetch, user)
-                      })
-                  } else {
-                    socket.emit(_kts.socket.returnPositionBot, {status: false, user: user})
-                  }
-                } else {
-                  socket.emit(_kts.socket.returnPositionBot, {status: false, user: user})
+                let position = order.position_cabman
+                if (positions && positions.length > 0) {
+                  position = positions[positions.length - 1].position
                 }
+                fetch(_url.getDistanceMatrix(position, order.position_user))
+                  .then(res => {
+                    return res.json()
+                  })
+                  .then(json => {
+                    _fns.getBot().emit(_kts.socket.returnPositionBot, {
+                      status: true,
+                      service: order.service,
+                      position_cabman: {
+                        distance: json.rows[0].elements[0].distance.value,
+                        time: json.rows[0].elements[0].duration.value,
+                        latitude: position.latitude,
+                        longitude: position.longitude
+                      },
+                      user: order.user
+                    })
+                  })
+                  .catch(err => {
+                    socket.emit(_kts.socket.errorFetch, user)
+                  })
               }
             } else {
               socket.emit(_kts.socket.returnPositionBot, {status: null, case: false, user: user})
