@@ -1,4 +1,6 @@
 var _global = require('./global')
+const _config = require('../config')
+const _kts = require('./kts')
 
 module.exports = {
   getBot: () => {
@@ -6,28 +8,31 @@ module.exports = {
       return _global.bots[index]
     }
   },
-  savePositionCab: async (id, position) => {
+  getInit: (data, method) => {
+    return {
+      method: method,
+      headers: { 'Content-Type': _kts.header.applicationJson },
+      body: JSON.stringify({
+        'info': JSON.stringify(data)
+      })
+    }
+  },
+  savePositionCab: async (id, data) => {
     if (!_global.positionsCab[id]) {
       _global.positionsCab[id] = []
     }
-    _global.positionsCab[id].push({
-      latitude: position.latitude,
-      longitude: position.longitude
-    })
+    data[_kts.json.date] = new Date()
+    _global.positionsCab[id].push(data)
   },
   deleteServiceForAccept: async (idService) => {
     (async () => {
       for (let index in _global.canceledOrders) {
-        delete _global.canceledOrders[index][idService]
-      }
-    })();
-    (async () => {
-      for (let index in _global.pendingOrders) {
-        delete _global.pendingOrders[index][idService]
+        let pos = _global.canceledOrders[index].indexOf(idService)
+        if (pos >= 0) _global.canceledOrders[index].splice(pos, 1)
       }
     })()
   },
   redirectDefault (res) {
-    res.redirect('https://www.facebook.com/taxitura/')
+    res.redirect(_config.urlServer)
   }
 }

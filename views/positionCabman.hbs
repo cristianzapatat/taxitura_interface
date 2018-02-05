@@ -97,7 +97,11 @@
         </a>
       </div>
       <div id="title" name="title" class="title">
-        <label>Taxitura - Posición Taxi</label>
+        {{#if action}}
+          <label id="title_text" name="title_text">Taxitura - Posición Taxi</label>
+        {{else}}
+          <label id="title_text" name="title_text">Taxitura - Posición Taxi - Pasajero Abordo</label>
+        {{/if}}
       </div>
       <div style="display:none;">
         <input type="hidden" name="data_tt" id="data_tt" value="{{data}}">
@@ -138,6 +142,7 @@
     var markerCabman
     var markerUser
     var data
+    var action = true
     var idMap
     var idSet
     let countNulls = 0
@@ -156,28 +161,35 @@
     jQuery('#icon').attr('src', `${urlBase}/img/logo/png`)
     function updatePosition () {
       idSet = setInterval(() => {
-        jQuery.post(`${urlBase}/get_current_position_cab/${data.user.id}`, (data) => {
+        jQuery.get(`${urlBase}/get_current_position_cab/${data.user.id}`, (data) => {
           if (data) {
             if (data.status) {
-              if (data.positions) {
+              if (data.data) {
                 markerCabman.setPosition({
-                  lat: data.positions.latitude,
-                  lng: data.positions.longitude
+                  lat: data.data.position.latitude,
+                  lng: data.data.position.longitude
                 })
+                if (!data.action && action) {
+                  markerUser.setIcon(`${urlBase}/img/user_disable/png`)
+                  markerUser.setTitle('Pósicion inicial')
+                  jQuery('#title_text').text('Taxitura - Posición Taxi - Pasajero Abordo')
+                }
               } else {
                 countNulls += 1
-                if (countNulls === 3) {
+                if (countNulls === 7) {
                   clearTime()
                 }
               }
             } else {
               clearTime()
               markerUser.setMap(null)
+              markerCabman.setTitle('Taxitura')
               markerCabman.setPosition({
                 lat: 3.8863253,
                 lng: -77.0498246
               })
               markerCabman.setIcon(`${urlBase}/img/taxitura/png`)
+              jQuery('#title_text').text('Taxitura - Posición Taxi')
               modal.style.display = 'block'
             }
           } else {
@@ -214,7 +226,7 @@
 
     function initMap () {
       data = JSON.parse(document.getElementById('data_tt').value)
-
+      action = data.action
       jQuery.ajax({url: `${urlBase}/json/mapStyleDay`, async: false, success: (data) => { styleDay = data }})
       jQuery.ajax({url: `${urlBase}/json/mapStyleNight`, async: false, success: (data) => { styleNight = data }})
 
@@ -237,8 +249,8 @@
       if (data.user) {
         markerUser = new google.maps.Marker({
           position: {lat: data.user.lat, lng: data.user.lng},
-          title: 'Tú',
-          icon: `${urlBase}/img/user/png`
+          title: data.action ? 'Tú' : 'Pósicion inicial',
+          icon: data.action ? `${urlBase}/img/user/png` : `${urlBase}/img/user_disable/png`
         })
         markerUser.setMap(map)
         updateStyleMap()

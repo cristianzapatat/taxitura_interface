@@ -10,7 +10,7 @@ const _kts = require('./util/kts')
 const _fns = require('./util/functions')
 const _config = require('./config')
 
-const ServiceClass = require('./class/service')
+const ServiceClass = require('./class/Service')
 const Service = new ServiceClass()
 
 const QueueClass = require('./class/Queue')
@@ -34,7 +34,7 @@ stompit.connect({host: _config.hostQueue, port: _config.portQueue}, (err, client
       require('./socket')(socket, io, Queue, Service)
     })
     require('./queue')(Queue, Service, io)
-  } else {
+  } else { // TODO definir que hacer
     console.log(err)
   }
 })
