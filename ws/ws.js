@@ -19,6 +19,28 @@ router.get('/gt', (req, res) => {
   })
 })
 
+router.get('/service_fact_today/:idDriver', (req, res) => {
+  let idDriver = req.params.idDriver
+  if (idDriver) {
+    fetch(_url.cantServicesDayDriver(idDriver))
+      .then(response => {
+        if (response.status >= 200 && response.status <= 299) {
+          return response.json()
+        } else {
+          throw response.status
+        }
+      })
+      .then(json => {
+        res.status(200).send({id: idDriver, cant: json.length})
+      })
+      .catch(err => {
+        res.status(404).send({id: idDriver, cant: 0})
+      })
+  } else {
+    res.status(404).send({id: idDriver, cant: 0})
+  }
+})
+
 router.get('/position_cabman/:idUser', (req, res) => {
   let id = req.params.idUser
   if (id) {

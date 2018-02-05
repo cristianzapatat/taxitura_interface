@@ -20,6 +20,7 @@ module.exports = {
     responseService: 'responseService',
     responseOrder: 'responseOrder',
     acceptService: 'acceptService',
+    processService: 'processService',
     acceptCancel: 'acceptCancel',
     orderCanceled: 'orderCanceled',
     savePositionCab: 'savePositionCab',

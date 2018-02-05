@@ -6,19 +6,25 @@ const _kts = require('./util/kts')
 const _url = require('./util/url')
 const _fns = require('./util/functions')
 
-function processResponseService (order, Service, socket, nameDate) {
+function processResponseService (order, Service, socket, nameDate, accept, cancel) {
   order = Service.addTime(order, nameDate)
   updateService(order, ord => {
-    actionResponseService(ord, socket)
+    actionResponseService(ord, socket, accept, cancel)
   }, (order, err) => { // TODO determinar que hacer en caso de error
   })
 }
 
-function actionResponseService (order, socket) {
+function actionResponseService (order, socket, accept, cancel) {
   _fns.getBot().emit(_kts.socket.responseOrder, order)
-  if (socket) {
-    socket.emit(_kts.socket.acceptService, order)
+  if (accept) {
+    if (!cancel) {
+      socket.emit(_kts.socket.acceptService, order)
+    } else {
+      socket.emit(_kts.socket.orderCanceled, order)
+    }
     _fns.deleteServiceForAccept(order.service.id)
+  } else {
+    socket.emit(_kts.socket.processService, order)
   }
   _fns.savePositionCab(order.cabman.id, {
     id: order.cabman.id,
@@ -115,13 +121,13 @@ module.exports = (socket, io, Queue, Service) => {
           if (orderAux.onMyWay) order[_kts.json.onMyWay] = orderAux.onMyWay
           if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) { // Aceptar el servio
             order = Service.addChanel(order, socket.id)
-            processResponseService(order, Service, socket, _kts.json.accept)
+            processResponseService(order, Service, socket, _kts.json.accept, true, false)
           } else if (order.action === _kts.action.arrive && orderAux.action === _kts.action.accept) { // el taxita llega donde el usuario
-            processResponseService(order, Service, null, _kts.json.arrive)
+            processResponseService(order, Service, socket, _kts.json.arrive, false, false)
           } else if (order.action === _kts.action.aboard && orderAux.action === _kts.action.arrive) { // El pasajero abordo el taxi según información del taxista
-            processResponseService(order, Service, null, _kts.json.aboard)
+            processResponseService(order, Service, socket, _kts.json.aboard, false, false)
           } else if (order.action === _kts.action.end && orderAux.action === _kts.action.aboard) { // fin del servio
-            processResponseService(order, Service, null, _kts.json.end)
+            processResponseService(order, Service, socket, _kts.json.end, false, false)
           } else {
             socket.emit(_kts.socket.acceptService, null)
           }
@@ -156,7 +162,7 @@ module.exports = (socket, io, Queue, Service) => {
               .then(json => {
                 order = Service.addChanel(order, socket.id)
                 order = Service.addTimeAndDistance(order, json.rows[0].elements[0].distance.value, json.rows[0].elements[0].duration.value)
-                processResponseService(order, Service, socket, _kts.json.accept)
+                processResponseService(order, Service, socket, _kts.json.accept, true, true)
               })
               .catch(err => {
                 // TODO validar el error de consulta del servicio

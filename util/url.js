@@ -27,5 +27,11 @@ module.exports = {
   },
   multipleServices: (ids) => {
     return `${urlServices}?filter_type=multiple_services&filter_params=${ids.toString()}`
+  },
+  cantServicesDayDriver: (idDriver, status) => {
+    let date = new Date()
+    if (!status) status = 'end'
+    let time = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`
+    return `${urlServices}?filter_type=day&initial_date=${time} 00:00:00&end_date=${time} 23:59:59&filter_params=${idDriver}&status=${status}`
   }
 }
