@@ -14,20 +14,12 @@ module.exports = {
       units=imperial&origins=${startLoc}&destinations=${endLoc}&
       key=${keyDistanceMatrix}&units=metric`
   },
-  getGeocoding: (pos) => {
-    return `https://maps.google.com/maps/api/geocode/json?
-      key=${keyGeocoding}&latlng=${encodeURI(`${pos.latitude},${pos.longitude}`)}`
-  },
+  getGeocoding: (pos) => `https://maps.google.com/maps/api/geocode/json?key=${keyGeocoding}&latlng=${encodeURI(`${pos.latitude},${pos.longitude}`)}`,
   urlServices,
-  lastServiceUser: (idUser) => {
-    return `${urlServices}?filter_type=last_user&filter_params=${idUser}`
-  },
-  lastServiceDriver: (idDriver) => {
-    return `${urlServices}?filter_type=last_driver&filter_params=${idDriver}`
-  },
-  multipleServices: (ids) => {
-    return `${urlServices}?filter_type=multiple_services&filter_params=${ids.toString()}`
-  },
+  getIdService: (idOrder) => `${urlServices}/${idOrder}`,
+  lastServiceUser: (idUser) => `${urlServices}?filter_type=last_user&filter_params=${idUser}`,
+  lastServiceDriver: (idDriver) => `${urlServices}?filter_type=last_driver&filter_params=${idDriver}`,
+  multipleServices: (ids) => `${urlServices}?filter_type=multiple_services&filter_params=${ids.toString()}`,
   cantServicesDayDriver: (idDriver, status) => {
     let date = new Date()
     if (!status) status = 'end'

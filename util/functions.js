@@ -2,12 +2,15 @@ var _global = require('./global')
 const _config = require('../config')
 const _kts = require('./kts')
 
+let reg = new RegExp(_kts.regex.inCity, 'g')
+
 module.exports = {
   getBot: () => {
     for (let index in _global.bots) {
       return _global.bots[index]
     }
   },
+  inCity: (address) => reg.test(address),
   getInit: (data, method) => {
     return {
       method: method,
@@ -32,7 +35,5 @@ module.exports = {
       }
     })()
   },
-  redirectDefault (res) {
-    res.redirect(_config.urlServer)
-  }
+  redirectDefault: (res) => res.redirect(_config.urlServer)
 }

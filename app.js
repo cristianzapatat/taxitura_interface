@@ -41,8 +41,6 @@ stompit.connect({host: _config.hostQueue, port: _config.portQueue}, (err, client
 
 app.use('/', WS)
 
-app.use((req, res, next) => {
-  _fns.redirectDefault(res)
-})
+app.use((req, res, next) => _fns.redirectDefault(res))
 
 module.exports = server

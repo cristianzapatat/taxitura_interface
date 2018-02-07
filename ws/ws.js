@@ -1,12 +1,13 @@
 /* eslint handle-callback-err: ["error", "error"] */
 const express = require('express')
 const fs = require('fs')
-const fetch = require('node-fetch')
 
 var _global = require('../util/global')
 const _fns = require('../util/functions')
-const _url = require('../util/url')
 const _kts = require('../util/kts')
+
+const ServiceClass = require('../class/Service')
+const Service = new ServiceClass()
 
 var router = express.Router()
 
@@ -22,20 +23,9 @@ router.get('/gt', (req, res) => {
 router.get('/service_fact_today/:idDriver', (req, res) => {
   let idDriver = req.params.idDriver
   if (idDriver) {
-    fetch(_url.cantServicesDayDriver(idDriver))
-      .then(response => {
-        if (response.status >= 200 && response.status <= 299) {
-          return response.json()
-        } else {
-          throw response.status
-        }
-      })
-      .then(json => {
-        res.status(200).send({id: idDriver, cant: json.length})
-      })
-      .catch(err => {
-        res.status(404).send({id: idDriver, cant: 0})
-      })
+    Service.getCantServicesDayDriver(idDriver,
+      json => res.status(200).send({id: idDriver, cant: json.length}),
+      err => res.status(404).send({id: idDriver, cant: 0}))
   } else {
     res.status(404).send({id: idDriver, cant: 0})
   }
@@ -44,15 +34,8 @@ router.get('/service_fact_today/:idDriver', (req, res) => {
 router.get('/position_cabman/:idUser', (req, res) => {
   let id = req.params.idUser
   if (id) {
-    fetch(_url.lastServiceUser(id))
-      .then(response => {
-        if (response.status >= 200 && response.status <= 299) {
-          return response.json()
-        } else {
-          throw response.status
-        }
-      })
-      .then(json => {
+    Service.getLastServiceUser(id,
+      json => {
         if (json && json.length) {
           let order = json[0].info
           let cabman = {
@@ -94,10 +77,8 @@ router.get('/position_cabman/:idUser', (req, res) => {
             })
           })
         }
-      })
-      .catch(err => {
-        _fns.redirectDefault(res)
-      })
+      },
+      err => _fns.redirectDefault(res))
   } else {
     _fns.redirectDefault(res)
   }
@@ -106,15 +87,8 @@ router.get('/position_cabman/:idUser', (req, res) => {
 router.get('/get_current_position_cab/:idUser', (req, res) => {
   let id = req.params.idUser
   if (id) {
-    fetch(_url.lastServiceUser(id))
-      .then(response => {
-        if (response.status >= 200 && response.status <= 299) {
-          return response.json()
-        } else {
-          throw response.status
-        }
-      })
-      .then(json => {
+    Service.getLastServiceUser(id,
+      json => {
         if (json && json.length) {
           let order = json[0].info
           let idCabman = order.cabman.id
@@ -139,10 +113,8 @@ router.get('/get_current_position_cab/:idUser', (req, res) => {
         } else {
           res.status(200).send({ status: false, data: null, cause: 'json is null' })
         }
-      })
-      .catch(err => {
-        res.status(500).send({ status: null, data: null, err: JSON.stringify(err) })
-      })
+      },
+      err => res.status(500).send({ status: null, data: null, err: JSON.stringify(err) }))
   } else {
     res.status(404).send({ status: null, data: null })
   }
@@ -161,7 +133,7 @@ router.get('/img/:img/png', (req, res) => {
   } else {
     image = fs.readFileSync(`./img/taxitura.png`)
   }
-  res.writeHead(200, { 'Content-Type': 'image/png' })
+  res.writeHead(200, {'Content-Type': 'image/png'})
   res.end(image, 'binary')
 })
 
@@ -170,11 +142,9 @@ router.get('/json/:name', (req, res) => {
   var json = {}
   if (name) {
     let root = `./json/${name}.json`
-    if (fs.existsSync(root)) {
-      json = fs.readFileSync(root, 'utf8')
-    }
+    if (fs.existsSync(root)) json = fs.readFileSync(root, 'utf8')
   }
-  res.writeHead(200, { 'Content-Type': 'application/json' })
+  res.writeHead(200, {'Content-Type': 'application/json'})
   res.end(json)
 })
 
@@ -183,25 +153,16 @@ router.get('/get_services_canceled/:idDriver', (req, res) => {
   if (idDriver) {
     let array = _global.canceledOrders[idDriver]
     if (array) {
-      fetch(_url.multipleServices(array))
-        .then(response => {
-          if (response.status >= 200 && response.status <= 299) {
-            return response.json()
-          } else {
-            throw response.status
-          }
-        })
-        .then(json => {
+      Service.getMultipleServices(array,
+        json => {
           let array = JSON.parse(json[0])
           let list = []
           for (var i = 0; i < array.length; i++) {
             list.push(array[i].info)
           }
           res.status(200).send(list)
-        })
-        .catch(err => {
-          res.status(404).send([])
-        })
+        },
+        err => res.status(404).send([]))
     } else {
       res.status(200).send([])
     }
