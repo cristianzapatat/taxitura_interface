@@ -5,15 +5,16 @@ var _global = require('./util/global')
 const _kts = require('./util/kts')
 const _url = require('./util/url')
 const _fns = require('./util/functions')
+const _script = require('./db/script')
 
-function processResponseService (order, Service, socket, nameDate, accept, cancel) {
+function processResponseService (order, Service, socket, nameDate, accept, cancel, db) {
   order = Service.addTime(order, nameDate)
   Service.update(order,
-    ord => actionResponseService(ord.info, socket, accept, cancel),
+    ord => actionResponseService(ord.info, socket, accept, cancel, db),
     err => {}) // TODO determinar que hacer en caso de error
 }
 
-function actionResponseService (order, socket, accept, cancel) {
+function actionResponseService (order, socket, accept, cancel, db) {
   _fns.getBot().emit(_kts.socket.responseOrder, order)
   if (accept) {
     if (!cancel) {
@@ -21,11 +22,11 @@ function actionResponseService (order, socket, accept, cancel) {
     } else {
       socket.emit(_kts.socket.orderCanceled, order)
     }
-    _fns.deleteServiceForAccept(order.service.id)
+    _fns.deleteServiceForAccept(order.cabman.id, order.service.id, db)
   } else {
     socket.emit(_kts.socket.processService, order)
   }
-  _fns.savePositionCab(order.cabman.id, {
+  _fns.savePositionCab({
     id: order.cabman.id,
     service: order.service.id,
     action: order.action,
@@ -33,10 +34,10 @@ function actionResponseService (order, socket, accept, cancel) {
       latitude: order.position_cabman.latitude,
       longitude: order.position_cabman.longitude
     }
-  })
+  }, db)
 }
 
-module.exports = (socket, io, Queue, Service) => {
+module.exports = (socket, io, Queue, Service, db) => {
   _global.clients[socket.id] = socket
 
   // Callback que elimina un socket de la lista cuando este se desconecta
@@ -87,13 +88,13 @@ module.exports = (socket, io, Queue, Service) => {
           if (orderAux.onMyWay) order[_kts.json.onMyWay] = orderAux.onMyWay
           if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) { // Aceptar el servio
             order = Service.addChanel(order, socket.id)
-            processResponseService(order, Service, socket, _kts.json.accept, true, false)
+            processResponseService(order, Service, socket, _kts.json.accept, true, false, db)
           } else if (order.action === _kts.action.arrive && orderAux.action === _kts.action.accept) { // el taxita llega donde el usuario
-            processResponseService(order, Service, socket, _kts.json.arrive, false, false)
+            processResponseService(order, Service, socket, _kts.json.arrive, false, false, db)
           } else if (order.action === _kts.action.aboard && orderAux.action === _kts.action.arrive) { // El pasajero abordo el taxi según información del taxista
-            processResponseService(order, Service, socket, _kts.json.aboard, false, false)
+            processResponseService(order, Service, socket, _kts.json.aboard, false, false, db)
           } else if (order.action === _kts.action.end && orderAux.action === _kts.action.aboard) { // fin del servio
-            processResponseService(order, Service, socket, _kts.json.end, false, false)
+            processResponseService(order, Service, socket, _kts.json.end, false, false, db)
           } else {
             socket.emit(_kts.socket.acceptService, null)
           }
@@ -118,7 +119,7 @@ module.exports = (socket, io, Queue, Service) => {
               .then(json => {
                 order = Service.addChanel(order, socket.id)
                 order = Service.addTimeAndDistance(order, json.rows[0].elements[0].distance.value, json.rows[0].elements[0].duration.value)
-                processResponseService(order, Service, socket, _kts.json.accept, true, true)
+                processResponseService(order, Service, socket, _kts.json.accept, true, true, db)
               })
               .catch(err => console.log('Error 2 acceptCancel', err)) // TODO validar el error de consulta del servicio
           } else {
@@ -133,7 +134,7 @@ module.exports = (socket, io, Queue, Service) => {
 
   // Callback para almacenar la posición del taxista
   socket.on(_kts.socket.savePositionCab, data => {
-    _fns.savePositionCab(data.id, data.data)
+    _fns.savePositionCab(data, db)
   })
 
   // Callback para validar si un taxista tiene un servicio en curso
@@ -159,15 +160,12 @@ module.exports = (socket, io, Queue, Service) => {
 
   // Callback para añadir un servio a la lista de servicios cancelados de un taxista
   socket.on(_kts.socket.addServiceCanceled, order => {
-    if (!_global.canceledOrders[order.cabman.id]) {
-      _global.canceledOrders[order.cabman.id] = []
-    }
-    _global.canceledOrders[order.cabman.id].push(order.service.id)
+    db.run(_script.insert.service, [order.cabman.id.toString(), order.service.id.toString()])
   })
 
   // callback usado para añadir una calificación a un servicio
   socket.on(_kts.socket.quality, data => {
-    Service.getId(data.servio.id,
+    Service.getId(data.service.id,
       json => {
         let message = ''
         if (json) {
@@ -207,30 +205,32 @@ module.exports = (socket, io, Queue, Service) => {
               let order = json[0].info
               if (order.action === _kts.action.order) {
                 socket.emit(_kts.socket.returnPositionBot, {status: null, case: true, user: user})
-              } else if (order.action === _kts.action.accept || _kts.action.arrive || _kts.action.aboard) {
-                let positions = _global.positionsCab[order.cabman.id]
+              } else if (order.action === _kts.action.accept || order.action === _kts.action.arrive || order.action === _kts.action.aboard) {
                 let position = order.position_cabman
-                if (positions && positions.length > 0) {
-                  position = positions[positions.length - 1].position
-                }
-                fetch(_url.getDistanceMatrix(position, order.position_user))
-                  .then(res => {
-                    return res.json()
-                  })
-                  .then(json => {
-                    _fns.getBot().emit(_kts.socket.returnPositionBot, {
-                      status: true,
-                      service: order.service,
-                      position_cabman: {
-                        distance: json.rows[0].elements[0].distance.value,
-                        time: json.rows[0].elements[0].duration.value,
-                        latitude: position.latitude,
-                        longitude: position.longitude
-                      },
-                      user: order.user
+                db.all(_script.select.position_last_cabman, [order.cabman.id], (err, rows) => {
+                  if (err) socket.emit(_kts.socket.errorFetch, user)
+                  else if (rows && rows.length > 0) {
+                    position = {latitude: rows[0].latitude, longitude: rows[0].longitude}
+                  }
+                  fetch(_url.getDistanceMatrix(position, order.position_user))
+                    .then(res => {
+                      return res.json()
                     })
-                  })
-                  .catch(err => socket.emit(_kts.socket.errorFetch, user))
+                    .then(json => {
+                      _fns.getBot().emit(_kts.socket.returnPositionBot, {
+                        status: true,
+                        service: order.service,
+                        position_cabman: {
+                          distance: json.rows[0].elements[0].distance.value,
+                          time: json.rows[0].elements[0].duration.value,
+                          latitude: position.latitude,
+                          longitude: position.longitude
+                        },
+                        user: order.user
+                      })
+                    })
+                    .catch(err => socket.emit(_kts.socket.errorFetch, user))
+                })
               }
             } else {
               socket.emit(_kts.socket.returnPositionBot, {status: null, case: false, user: user})

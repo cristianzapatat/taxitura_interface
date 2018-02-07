@@ -5,18 +5,16 @@ const fs = require('fs')
 var _global = require('../util/global')
 const _fns = require('../util/functions')
 const _kts = require('../util/kts')
+const _script = require('../db/script')
 
-const ServiceClass = require('../class/Service')
-const Service = new ServiceClass()
+var Service, db
 
 var router = express.Router()
 
 router.get('/gt', (req, res) => {
   res.status(200).send({
     bots: Object.keys(_global.bots).length,
-    clients: Object.keys(_global.clients).length,
-    positionsCab: _global.positionsCab,
-    canceledOrders: _global.canceledOrders
+    clients: Object.keys(_global.clients).length
   })
 })
 
@@ -38,34 +36,43 @@ router.get('/position_cabman/:idUser', (req, res) => {
       json => {
         if (json && json.length) {
           let order = json[0].info
+          let action = order.action === _kts.action.accept || order.action === _kts.action.arrive
           let cabman = {
             name: order.cabman.name,
             lat: order.position_cabman.latitude,
             lng: order.position_cabman.longitude
           }
-          let positions = _global.positionsCab[order.cabman.id]
-          if (positions) {
-            if (positions.length > 0) {
+          db.all(_script.select.position_last_cabman, [order.cabman.id], (err, rows) => {
+            if (err) _fns.redirectDefault(res)
+            else if (rows && rows.length > 0) {
               cabman = {
                 name: order.cabman.name,
-                lat: positions[positions.length - 1].position.latitude,
-                lng: positions[positions.length - 1].position.longitude
+                lat: rows[0].latitude,
+                lng: rows[0].longitude
               }
+              res.render('positionCabman', {
+                data: JSON.stringify({
+                  status: true,
+                  action,
+                  user: {
+                    id: order.user.id,
+                    lat: order.position_user.latitude,
+                    lng: order.position_user.longitude
+                  },
+                  cabman
+                }),
+                action
+              })
+            } else {
+              res.render('positionCabman', {
+                action: true,
+                data: JSON.stringify({
+                  status: false,
+                  user: null,
+                  cabman: null
+                })
+              })
             }
-          }
-          let action = order.action === _kts.action.accept || order.action === _kts.action.arrive
-          res.render('positionCabman', {
-            data: JSON.stringify({
-              status: true,
-              action,
-              user: {
-                id: order.user.id,
-                lat: order.position_user.latitude,
-                lng: order.position_user.longitude
-              },
-              cabman
-            }),
-            action
           })
         } else {
           res.render('positionCabman', {
@@ -93,20 +100,18 @@ router.get('/get_current_position_cab/:idUser', (req, res) => {
           let order = json[0].info
           let idCabman = order.cabman.id
           if (idCabman) {
-            let positions = _global.positionsCab[idCabman]
-            if (positions) {
-              if (positions.length > 0) {
+            db.all(_script.select.position_last_cabman, [order.cabman.id], (err, rows) => {
+              if (err) res.status(500).send({ status: null, data: null, err: JSON.stringify(err) })
+              else if (rows && rows.length > 0) {
                 res.status(200).send({
                   status: true,
-                  data: positions[positions.length - 1],
+                  data: rows[0],
                   action: order.action === _kts.action.accept || order.action === _kts.action.arrive
                 })
               } else {
                 res.status(200).send({ status: true, data: null, cause: 'there aren\'t positions' })
               }
-            } else {
-              res.status(200).send({ status: true, data: null, cause: 'positions are nulls' })
-            }
+            })
           } else {
             res.status(200).send({ status: true, data: null, cause: 'there aren\'t idCabman' })
           }
@@ -151,24 +156,40 @@ router.get('/json/:name', (req, res) => {
 router.get('/get_services_canceled/:idDriver', (req, res) => {
   let idDriver = req.params.idDriver
   if (idDriver) {
-    let array = _global.canceledOrders[idDriver]
-    if (array) {
-      Service.getMultipleServices(array,
-        json => {
-          let array = JSON.parse(json[0])
-          let list = []
-          for (var i = 0; i < array.length; i++) {
-            list.push(array[i].info)
-          }
-          res.status(200).send(list)
-        },
-        err => res.status(404).send([]))
-    } else {
-      res.status(200).send([])
-    }
+    db.all(_script.select.service_cabman, [idDriver], (err, rows) => {
+      if (err) res.status(500).send([])
+      else if (rows && rows.length > 0) {
+        let array = []
+        for (var i = 0; i < rows.length; i++) {
+          array.push(parseInt(rows[i].service))
+        }
+        Service.getMultipleServices(array,
+          json => {
+            let list = []
+            for (var i = 0; i < json.length; i++) {
+              let arr = JSON.parse(json[i])
+              for (var j = 0; j < arr.length; j++) {
+                list.push(arr[j].info)
+              }
+            }
+            res.status(200).send(list)
+          },
+          err => res.status(404).send([]))
+      } else {
+        res.status(200).send([])
+      }
+    })
   } else {
     res.status(404).send([])
   }
 })
 
-module.exports = router
+module.exports = {
+  router,
+  setService: (service) => {
+    Service = service
+  },
+  setDb: (database) => {
+    db = database
+  }
+}

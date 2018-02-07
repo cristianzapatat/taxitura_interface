@@ -1,6 +1,7 @@
 var _global = require('./global')
 const _config = require('../config')
 const _kts = require('./kts')
+const _script = require('../db/script')
 
 let reg = new RegExp(_kts.regex.inCity, 'g')
 
@@ -20,20 +21,11 @@ module.exports = {
       })
     }
   },
-  savePositionCab: async (id, data) => {
-    if (!_global.positionsCab[id]) {
-      _global.positionsCab[id] = []
-    }
-    data[_kts.json.date] = new Date()
-    _global.positionsCab[id].push(data)
+  savePositionCab: async (data, db) => {
+    db.run(_script.insert.position, [data.id, data.service, data.action, data.position.latitude, data.position.longitude, new Date().toString()])
   },
-  deleteServiceForAccept: async (idService) => {
-    (async () => {
-      for (let index in _global.canceledOrders) {
-        let pos = _global.canceledOrders[index].indexOf(idService)
-        if (pos >= 0) _global.canceledOrders[index].splice(pos, 1)
-      }
-    })()
+  deleteServiceForAccept: async (idDriver, idService, db) => {
+    db.run(_script.update.service_status, [idDriver, idService])
   },
   redirectDefault: (res) => res.redirect(_config.urlServer)
 }

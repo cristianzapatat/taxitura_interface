@@ -72,8 +72,7 @@ module.exports = {
     aboard: 'aboard',
     end: 'end',
     cancel: 'cancel',
-    err: 'error',
-    date: 'date'
+    err: 'error'
   },
   operators: {
     coma: ','
@@ -90,8 +89,5 @@ module.exports = {
     contentType: 'Content-Type',
     multiparFormData: 'multipart/form-data',
     applicationJson: 'application/json'
-  },
-  body: {
-    info: 'info'
   }
 }
