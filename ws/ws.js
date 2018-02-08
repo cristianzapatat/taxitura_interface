@@ -166,10 +166,10 @@ router.get('/get_services_canceled/:idDriver', (req, res) => {
         Service.getMultipleServices(array,
           json => {
             let list = []
-            for (var i = 0; i < json.length; i++) {
-              let arr = JSON.parse(json[i])
-              for (var j = 0; j < arr.length; j++) {
-                list.push(arr[j].info)
+            if (json && json.length > 0) {
+              json = JSON.parse(`[${json.toString().replace(/"=>/g, '":')}]`)
+              for (var i = 0; i < json.length; i++) {
+                list.push(json[i].info)
               }
             }
             res.status(200).send(list)

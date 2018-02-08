@@ -71,11 +71,6 @@ class Service {
     return order
   }
 
-  addChanel (order, channel) {
-    order[_kts.json.channel] = channel
-    return order
-  }
-
   addTime (order, nameTime) {
     order.date[nameTime] = new Date()
     return order

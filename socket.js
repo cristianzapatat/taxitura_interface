@@ -38,24 +38,24 @@ function actionResponseService (order, socket, accept, cancel, db) {
 }
 
 module.exports = (socket, io, Queue, Service, db) => {
-  _global.clients[socket.id] = socket
-
   // Callback que elimina un socket de la lista cuando este se desconecta
   socket.on(_kts.socket.disconnect, () => {
-    if (_global.clients[socket.id]) {
-      delete _global.clients[socket.id]
-    }
-    if (_global.bots[socket.id]) {
-      delete _global.bots[socket.id]
-    }
+    if (_global.clients[socket.id]) delete _global.clients[socket.id]
+    if (_global.bots[socket.id]) delete _global.bots[socket.id]
   })
 
   // Proceso para obtener los bots del sistema
   socket.emit(_kts.socket.getBot, true)
   socket.on(_kts.socket.responseBot, data => {
-    if (data === true) {
-      delete _global.clients[socket.id]
-      _global.bots[socket.id] = socket
+    if (data === true) _global.bots[socket.id] = socket
+  })
+
+  // proceso para recuperar los socket de los clientes
+  socket.emit(_kts.socket.getClient, true)
+  socket.on(_kts.socket.responseClient, id => {
+    if (id) {
+      socket.id = id
+      _global.clients[id] = socket
     }
   })
 
@@ -87,7 +87,6 @@ module.exports = (socket, io, Queue, Service, db) => {
           order.date = orderAux.date
           if (orderAux.onMyWay) order[_kts.json.onMyWay] = orderAux.onMyWay
           if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) { // Aceptar el servio
-            order = Service.addChanel(order, socket.id)
             processResponseService(order, Service, socket, _kts.json.accept, true, false, db)
           } else if (order.action === _kts.action.arrive && orderAux.action === _kts.action.accept) { // el taxita llega donde el usuario
             processResponseService(order, Service, socket, _kts.json.arrive, false, false, db)
@@ -117,7 +116,6 @@ module.exports = (socket, io, Queue, Service, db) => {
                 return response.json()
               })
               .then(json => {
-                order = Service.addChanel(order, socket.id)
                 order = Service.addTimeAndDistance(order, json.rows[0].elements[0].distance.value, json.rows[0].elements[0].duration.value)
                 processResponseService(order, Service, socket, _kts.json.accept, true, true, db)
               })
@@ -139,15 +137,14 @@ module.exports = (socket, io, Queue, Service, db) => {
 
   // Callback para validar si un taxista tiene un servicio en curso
   socket.on(_kts.socket.serviceInMemory, idDriver => {
+    socket.id = idDriver
+    _global.clients[idDriver] = socket
     Service.getLastServiceDriver(idDriver,
       json => {
         if (json) {
           if (json.length > 0) {
             let order = json[0].info
-            order = Service.addChanel(order, socket.id)
-            Service.update(order,
-              ord => socket.emit(_kts.socket.isServiceInMemory, ord.info),
-              err => console.log('serviceInMemory', err)) // TODO determinar que hacer en caso de error
+            socket.emit(_kts.socket.isServiceInMemory, order)
           } else {
             socket.emit(_kts.socket.isServiceInMemory, null)
           }
@@ -249,27 +246,25 @@ module.exports = (socket, io, Queue, Service, db) => {
       json => {
         if (json) {
           let order = json.info
-          if (order.channel) {
-            if (order.action === _kts.action.arrive) {
-              let sock = _global.clients[order.channel]
-              let update = false
-              if (sock) {
-                if (!order.onMyWay) {
-                  order[_kts.json.onMyWay] = []
-                  order.onMyWay.push(new Date().getTime())
+          if (order.action === _kts.action.arrive) {
+            let sock = _global.clients[order.cabman.id]
+            let update = false
+            if (sock) {
+              if (!order.onMyWay) {
+                order[_kts.json.onMyWay] = []
+                order.onMyWay.push(new Date().getTime())
+                update = true
+              } else {
+                let time = new Date()
+                if ((time.getTime() - order.onMyWay[order.onMyWay.length - 1]) > _kts.time.onMyWay) {
+                  order.onMyWay.push(time.getTime())
                   update = true
-                } else {
-                  let time = new Date()
-                  if ((time.getTime() - order.onMyWay[order.onMyWay.length - 1]) > _kts.time.onMyWay) {
-                    order.onMyWay.push(time.getTime())
-                    update = true
-                  }
                 }
-                if (update) {
-                  Service.update(order,
-                    ord => sock.emit(_kts.socket.onMyWay, data),
-                    err => socket.emit(_kts.socket.errorFetch, data.user))
-                }
+              }
+              if (update) {
+                Service.update(order,
+                  ord => sock.emit(_kts.socket.onMyWay, data),
+                  err => socket.emit(_kts.socket.errorFetch, data.user))
               }
             }
           }

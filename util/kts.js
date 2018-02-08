@@ -17,6 +17,8 @@ module.exports = {
   socket: {
     connection: 'connection',
     getBot: 'getBot',
+    getClient: 'getClient',
+    responseClient: 'responseClient',
     responseBot: 'responseBot',
     createService: 'createService',
     receiveService: 'receiveService',
