@@ -18,6 +18,10 @@ router.get('/gt', (req, res) => {
   })
 })
 
+router.get('/isInternet', (req, res) => {
+  res.status(200).send({status: true})
+})
+
 router.get('/service_fact_today/:idDriver', (req, res) => {
   let idDriver = req.params.idDriver
   if (idDriver) {
