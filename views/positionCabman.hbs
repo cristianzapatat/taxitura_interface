@@ -166,8 +166,8 @@
             if (data.status) {
               if (data.data) {
                 markerCabman.setPosition({
-                  lat: data.data.position.latitude,
-                  lng: data.data.position.longitude
+                  lat: data.data.latitude,
+                  lng: data.data.longitude
                 })
                 if (!data.action && action) {
                   markerUser.setIcon(`${urlBase}/img/user_disable/png`)

@@ -9,18 +9,9 @@ const _fns = require('./util/functions')
 function saveService (body, Service, Queue, newTry) {
   let order = JSON.parse(body)
   if (newTry) order = Service.create(order, _kts.json.facebook)
-  fetch(_url.urlServices, _fns.getInit(order, _kts.method.post))
-    .then(response => {
-      if (response.status >= 200 && response.status <= 299) {
-        return response.json()
-      } else {
-        throw response.status
-      }
-    })
-    .then(data => {
-      Queue.sendMessageService(JSON.stringify(order))
-    })
-    .catch(err => {
+  Service.save(order,
+    data => Queue.sendMessageService(JSON.stringify(data.info)),
+    err => {
       _fns.getBot().emit(_kts.socket.notFoundCabman, order)
       order[_kts.json.err] = err
       if (newTry) Queue.saveServiceQueueError(JSON.stringify(order))
@@ -35,24 +26,25 @@ function addAddress (io, body, Service, Queue) {
   })
   .then(json => {
     order = Service.addAddress(order, json.results[0].formatted_address)
-    fetch(`${_url.urlServices}/${order.service.id}`, _fns.getInit(order, _kts.method.put))
-      .then(response => {
-        if (response.status >= 200 && response.status <= 299) {
-          return response.json()
-        } else {
-          throw response.status
-        }
-      })
-      .then(json => {
-        io.emit(_kts.socket.receiveService, json.info)
-      })
-      .catch(err => {
-        catchSend(order, Queue, err)
-      })
+    Service.update(order,
+      data => emitToSocket(io, Service, data.info),
+      err => catchSend(order, Queue, err))
   })
   .catch(err => {
     catchSend(order, Queue)
   })
+}
+
+function emitToSocket (io, Service, order) {
+  if (_fns.inCity(order.position_user.addressFull)) {
+    io.emit(_kts.socket.receiveService, order)
+  } else {
+    order.action = _kts.action.outOfCity
+    order = Service.addTime(order, _kts.json.cancel)
+    Service.update(order,
+      data => _fns.getBot().emit(_kts.socket.outOfCity, data.info),
+      err => {}) // TODO
+  }
 }
 
 function catchSend (order, Queue, err) {

@@ -2,6 +2,9 @@
 File that contains the constants of the project
 */
 module.exports = {
+  regex: {
+    inCity: '(.)*((,|-|\\.|\\*|_)*(\\s|\\S)*(B|b)uenaventura(,|-|\\.|\\*|_)(\\s|\\S)*(V|v)alle(\\s|\\S)*del(\\s)*(C|c)auca(,|-|\\.|\\*|_)(\\s|\\S)*(C|c)olombia)'
+  },
   conf: {
     utf8: 'UTF-8'
   },
@@ -14,6 +17,8 @@ module.exports = {
   socket: {
     connection: 'connection',
     getBot: 'getBot',
+    getClient: 'getClient',
+    responseClient: 'responseClient',
     responseBot: 'responseBot',
     createService: 'createService',
     receiveService: 'receiveService',
@@ -39,6 +44,7 @@ module.exports = {
     errorMessageQueue: 'errorMessageQueue',
     orderInProcess: 'orderInProcess',
     orderProcessing: 'orderProcessing',
+    outOfCity: 'outOfCity',
     disconnect: 'disconnect',
     errorFetch: 'errorFetch'
   },
@@ -48,7 +54,8 @@ module.exports = {
     arrive: 'arrive',
     aboard: 'aboard',
     end: 'end',
-    cancel: 'cancel'
+    cancel: 'cancel',
+    outOfCity: 'outofcity'
   },
   json: {
     service: 'service',
@@ -67,8 +74,7 @@ module.exports = {
     aboard: 'aboard',
     end: 'end',
     cancel: 'cancel',
-    err: 'error',
-    date: 'date'
+    err: 'error'
   },
   operators: {
     coma: ','
@@ -85,8 +91,5 @@ module.exports = {
     contentType: 'Content-Type',
     multiparFormData: 'multipart/form-data',
     applicationJson: 'application/json'
-  },
-  body: {
-    info: 'info'
   }
 }
