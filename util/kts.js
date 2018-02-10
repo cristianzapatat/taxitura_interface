@@ -46,7 +46,9 @@ module.exports = {
     orderProcessing: 'orderProcessing',
     outOfCity: 'outOfCity',
     disconnect: 'disconnect',
-    errorFetch: 'errorFetch'
+    errorFetch: 'errorFetch',
+    sessionEnd: 'sessionEnd',
+    sessionStart: 'sessionStart'
   },
   action: {
     order: 'order',
