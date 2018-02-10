@@ -12,10 +12,16 @@ module.exports = {
     }
   },
   inCity: (address) => reg.test(address),
+  getMeService: (token) => {
+    return {
+      method: _kts.method.get,
+      headers: {'user_token': token}
+    }
+  },
   getInit: (data, method) => {
     return {
       method: method,
-      headers: { 'Content-Type': _kts.header.applicationJson },
+      headers: {'Content-Type': _kts.header.applicationJson},
       body: JSON.stringify({
         'info': JSON.stringify(data)
       })

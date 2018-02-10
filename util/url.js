@@ -7,6 +7,7 @@ let urlServices = `${_config.urlServer}/api/v1/services`
 module.exports = {
   keyDistanceMatrix,
   keyGeocoding,
+  meService: `${_config.urlServer}/api/v1/me`,
   getDistanceMatrix: (start, end) => {
     let startLoc = `${start.latitude},${start.longitude}`
     let endLoc = `${end.latitude},${end.longitude}`
