@@ -1,12 +1,13 @@
 /* eslint handle-callback-err: ["error", "error"] */
 const fetch = require('node-fetch')
 
+const _global = require('./util/global')
 const _config = require('./config')
 const _url = require('./util/url')
 const _kts = require('./util/kts')
 const _fns = require('./util/functions')
 
-function saveService (body, Service, Queue, newTry) {
+async function saveService (body, Service, Queue, newTry) {
   let order = JSON.parse(body)
   if (newTry) order = Service.create(order, _kts.json.facebook)
   Service.save(order,
@@ -18,7 +19,7 @@ function saveService (body, Service, Queue, newTry) {
     })
 }
 
-function addAddress (io, body, Service, Queue) {
+async function addAddress (io, body, Service, Queue) {
   let order = JSON.parse(body)
   fetch(_url.getGeocoding(order.position_user))
   .then(result => {
@@ -35,9 +36,17 @@ function addAddress (io, body, Service, Queue) {
   })
 }
 
-function emitToSocket (io, Service, order) {
+async function emitToSocket (io, Service, order) {
   if (_fns.inCity(order.position_user.addressFull)) {
-    io.emit(_kts.socket.receiveService, order)
+    if (Object.keys(_global.clients).length > 0) {
+      io.emit(_kts.socket.receiveService, order)
+    } else {
+      order.action = _kts.action.withoutCab
+      order = Service.addTime(order, _kts.json.cancel)
+      Service.update(order,
+        data => _fns.getBot().emit(_kts.socket.withoutCab, data.info),
+        err => {}) // TODO
+    }
   } else {
     order.action = _kts.action.outOfCity
     order = Service.addTime(order, _kts.json.cancel)
@@ -47,7 +56,7 @@ function emitToSocket (io, Service, order) {
   }
 }
 
-function catchSend (order, Queue, err) {
+async function catchSend (order, Queue, err) {
   if (err) order[_kts.json.err] = err
   if (order.try) {
     order.try += 1
