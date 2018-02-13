@@ -1,196 +1,199 @@
+/* eslint handle-callback-err: ["error", "error"] */
 const express = require('express')
 const fs = require('fs')
 
 var _global = require('../util/global')
 const _fns = require('../util/functions')
+const _kts = require('../util/kts')
+const _script = require('../db/script')
+
+var Service, db
 
 var router = express.Router()
 
 router.get('/gt', (req, res) => {
   res.status(200).send({
     bots: Object.keys(_global.bots).length,
-    clients: Object.keys(_global.clients).length,
-    cant: {
-      orders: Object.keys(_global.orders).length,
-      ordersInForce: Object.keys(_global.ordersInForce).length,
-      finishedOrders: Object.keys(_global.finishedOrders).length
-    },
-    positionsCab: _global.positionsCab,
-    orders: _global.orders,
-    ordersInForce: _global.ordersInForce,
-    finishedOrders: _global.finishedOrders,
-    pendingOrders: _global.pendingOrders,
-    canceledOrders: _global.canceledOrders
+    clients: Object.keys(_global.clients).length
   })
 })
 
-router.get('/dlt', (req, res) => {
-  _global.positionsCab = {}
-  _global.orders = {}
-  _global.finishedOrders = {}
-  _global.ordersInForce = {}
-  _global.pendingOrders = {}
-  _global.canceledOrders = {}
-  res.status(200).send({
-    status: 'OK'
-  })
+router.get('/isInternet', (req, res) => {
+  res.status(200).send({status: true})
 })
 
-router.get('/position_cabman/:order/:user', (req, res) => {
-  let order = req.params.order
-  let user = req.params.user
-  if (order && user) {
-    let service = _global.orders[order]
-    let serviceInForce = _global.ordersInForce[user]
-    if (service && serviceInForce) {
-      if (service.service.id === serviceInForce.service.id) {
-        let data = JSON.stringify({
-          status: true,
-          user: {
-            id: serviceInForce.user.id,
-            lat: serviceInForce.position_user.latitude,
-            lng: serviceInForce.position_user.longitude
-          },
-          cabman: {
-            name: serviceInForce.cabman.name,
-            lat: serviceInForce.position_cabman.latitude,
-            lng: serviceInForce.position_cabman.longitude
-          },
-          service: {
-            id: order
+router.get('/service_fact_today/:idDriver', (req, res) => {
+  let idDriver = req.params.idDriver
+  if (idDriver) {
+    Service.getCantServicesDayDriver(idDriver,
+      json => res.status(200).send({id: idDriver, cant: json.length}),
+      err => res.status(404).send({id: idDriver, cant: 0}))
+  } else {
+    res.status(404).send({id: idDriver, cant: 0})
+  }
+})
+
+router.get('/position_cabman/:idUser', (req, res) => {
+  let id = req.params.idUser
+  if (id) {
+    Service.getLastServiceUser(id,
+      json => {
+        if (json && json.length) {
+          let order = json[0].info
+          let action = order.action === _kts.action.accept || order.action === _kts.action.arrive
+          let cabman = {
+            name: order.cabman.name,
+            lat: order.position_cabman.latitude,
+            lng: order.position_cabman.longitude
           }
-        })
-        res.render('positionCabman', {
-          data: data
-        })
-      } else {
-        let data = JSON.stringify({
-          status: false,
-          user: null,
-          cabman: null,
-          service: { id: order }
-        })
-        res.render('positionCabman', {
-          data
-        })
-      }
-    } else {
-      if (service) {
-        let data = JSON.stringify({
-          status: false,
-          user: null,
-          cabman: null,
-          service: { id: order }
-        })
-        res.render('positionCabman', {
-          data
-        })
-      } else {
-        _fns.redirectDefault(res)
-      }
-    }
+          db.all(_script.select.position_last_cabman, [order.cabman.id], (err, rows) => {
+            if (err) _fns.redirectDefault(res)
+            else if (rows && rows.length > 0) {
+              cabman = {
+                name: order.cabman.name,
+                lat: rows[0].latitude,
+                lng: rows[0].longitude
+              }
+              res.render('positionCabman', {
+                data: JSON.stringify({
+                  status: true,
+                  action,
+                  user: {
+                    id: order.user.id,
+                    lat: order.position_user.latitude,
+                    lng: order.position_user.longitude
+                  },
+                  cabman
+                }),
+                action
+              })
+            } else {
+              res.render('positionCabman', {
+                action: true,
+                data: JSON.stringify({
+                  status: false,
+                  user: null,
+                  cabman: null
+                })
+              })
+            }
+          })
+        } else {
+          res.render('positionCabman', {
+            action: true,
+            data: JSON.stringify({
+              status: false,
+              user: null,
+              cabman: null
+            })
+          })
+        }
+      },
+      err => _fns.redirectDefault(res))
   } else {
     _fns.redirectDefault(res)
   }
 })
 
+router.get('/get_current_position_cab/:idUser', (req, res) => {
+  let id = req.params.idUser
+  if (id) {
+    Service.getLastServiceUser(id,
+      json => {
+        if (json && json.length) {
+          let order = json[0].info
+          let idCabman = order.cabman.id
+          if (idCabman) {
+            db.all(_script.select.position_last_cabman, [order.cabman.id], (err, rows) => {
+              if (err) res.status(500).send({ status: null, data: null, err: JSON.stringify(err) })
+              else if (rows && rows.length > 0) {
+                res.status(200).send({
+                  status: true,
+                  data: rows[0],
+                  action: order.action === _kts.action.accept || order.action === _kts.action.arrive
+                })
+              } else {
+                res.status(200).send({ status: true, data: null, cause: 'there aren\'t positions' })
+              }
+            })
+          } else {
+            res.status(200).send({ status: true, data: null, cause: 'there aren\'t idCabman' })
+          }
+        } else {
+          res.status(200).send({ status: false, data: null, cause: 'json is null' })
+        }
+      },
+      err => res.status(500).send({ status: null, data: null, err: JSON.stringify(err) }))
+  } else {
+    res.status(404).send({ status: null, data: null })
+  }
+})
+
 router.get('/img/:img/png', (req, res) => {
   let name = req.params.img
+  let image = null
   if (name) {
     let root = `./img/${name}.png`
     if (fs.existsSync(root)) {
-      var img = fs.readFileSync(root)
-      res.writeHead(200, { 'Content-Type': 'image/png' })
-      res.end(img, 'binary')
+      image = fs.readFileSync(root)
     } else {
-      var image = fs.readFileSync(`./img/taxitura.png`)
-      res.writeHead(200, { 'Content-Type': 'image/png' })
-      res.end(image, 'binary')
+      image = fs.readFileSync(`./img/taxitura.png`)
     }
   } else {
-    var imgg = fs.readFileSync(`./img/taxitura.png`)
-    res.writeHead(200, { 'Content-Type': 'image/png' })
-    res.end(imgg, 'binary')
+    image = fs.readFileSync(`./img/taxitura.png`)
   }
+  res.writeHead(200, {'Content-Type': 'image/png'})
+  res.end(image, 'binary')
 })
 
 router.get('/json/:name', (req, res) => {
   let name = req.params.name
+  var json = {}
   if (name) {
     let root = `./json/${name}.json`
-    if (fs.existsSync(root)) {
-      var json = fs.readFileSync(root, 'utf8')
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end(json)
-    } else {
-      res.writeHead(200, { 'Content-Type': 'application/json' })
-      res.end('{}')
-    }
-  } else {
-    res.writeHead(200, { 'Content-Type': 'application/json' })
-    res.end('{}')
+    if (fs.existsSync(root)) json = fs.readFileSync(root, 'utf8')
   }
+  res.writeHead(200, {'Content-Type': 'application/json'})
+  res.end(json)
 })
 
-router.get('/get_services_canceled/:id', (req, res) => {
-  let list = []
-  if (req.params.id) {
-    let servicesCanceled = _global.canceledOrders[req.params.id]
-    if (servicesCanceled) {
-      let cant = Object.keys(servicesCanceled).length
-      if (cant > 0) {
-        for (let index in servicesCanceled) {
-          list.push(servicesCanceled[index])
+router.get('/get_services_canceled/:idDriver', (req, res) => {
+  let idDriver = req.params.idDriver
+  if (idDriver) {
+    db.all(_script.select.service_cabman, [idDriver], (err, rows) => {
+      if (err) res.status(500).send([])
+      else if (rows && rows.length > 0) {
+        let array = []
+        for (var i = 0; i < rows.length; i++) {
+          array.push(parseInt(rows[i].service))
         }
-      }
-    }
-  }
-  res.status(200).send(list)
-})
-
-router.post('/get_current_position_cab/:user', (req, res) => {
-  let user = req.params.user
-  if (user) {
-    let service = _global.ordersInForce[user]
-    if (service) {
-      let idCabman = service.cabman.id
-      if (idCabman) {
-        let positions = _global.positionsCab[idCabman]
-        if (positions) {
-          if (positions.length > 0) {
-            res.status(200).send({
-              status: true,
-              positions: positions[positions.length - 1]
-            })
-          } else {
-            res.status(200).send({
-              status: true,
-              positions: null
-            })
-          }
-        } else {
-          res.status(200).send({
-            status: true,
-            positions: null
-          })
-        }
+        Service.getMultipleServices(array,
+          json => {
+            let list = []
+            if (json && json.length > 0) {
+              json = JSON.parse(`[${json.toString().replace(/"=>/g, '":')}]`)
+              for (var i = 0; i < json.length; i++) {
+                list.push(json[i].info)
+              }
+            }
+            res.status(200).send(list)
+          },
+          err => res.status(404).send([]))
       } else {
-        res.status(200).send({
-          status: true,
-          positions: null
-        })
+        res.status(200).send([])
       }
-    } else { // Service end
-      res.status(200).send({
-        status: false,
-        positions: null
-      })
-    }
+    })
+  } else {
+    res.status(404).send([])
   }
-  res.status(404).send({
-    status: null,
-    positions: null
-  })
 })
 
-module.exports = router
+module.exports = {
+  router,
+  setService: (service) => {
+    Service = service
+  },
+  setDb: (database) => {
+    db = database
+  }
+}

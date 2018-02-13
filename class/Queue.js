@@ -11,6 +11,14 @@ class Queue {
     frame.end()
   }
 
+  saveServiceQueue (message) {
+    this.sendMessage(message, _config.saveServiceQueue)
+  }
+
+  saveServiceQueueError (message) {
+    this.sendMessage(message, _config.saveServiceQueueError)
+  }
+
   sendMessageService (message) {
     this.sendMessage(message, _config.sendMessageQueue)
   }
@@ -23,7 +31,7 @@ class Queue {
     this._client.subscribe({destination: queue}, (err, msg) => {
       if (!err) {
         callback(msg)
-      } else {
+      } else { // TODO definir que hacer
         console.log(err)
       }
     })
