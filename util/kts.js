@@ -2,9 +2,6 @@
 File that contains the constants of the project
 */
 module.exports = {
-  regex: {
-    inCity: '(.)*((,|-|\\.|\\*|_)*(\\s|\\S)*(B|b)uenaventura(,|-|\\.|\\*|_)(\\s|\\S)*(V|v)alle(\\s|\\S)*del(\\s)*(C|c)auca(,|-|\\.|\\*|_)(\\s|\\S)*(C|c)olombia)'
-  },
   conf: {
     utf8: 'UTF-8'
   },
@@ -48,7 +45,8 @@ module.exports = {
     disconnect: 'disconnect',
     errorFetch: 'errorFetch',
     sessionEnd: 'sessionEnd',
-    sessionStart: 'sessionStart'
+    sessionStart: 'sessionStart',
+    withoutCab: 'withoutCab'
   },
   action: {
     order: 'order',
@@ -57,7 +55,8 @@ module.exports = {
     aboard: 'aboard',
     end: 'end',
     cancel: 'cancel',
-    outOfCity: 'outofcity'
+    outOfCity: 'outofcity',
+    withoutCab: 'withoutCab'
   },
   json: {
     service: 'service',

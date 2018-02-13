@@ -3,15 +3,16 @@ const _config = require('../config')
 const _kts = require('./kts')
 const _script = require('../db/script')
 
-let reg = new RegExp(_kts.regex.inCity, 'g')
-
 module.exports = {
   getBot: () => {
     for (let index in _global.bots) {
       return _global.bots[index]
     }
   },
-  inCity: (address) => reg.test(address),
+  inCity: (address) => {
+    let value = /(.)*((,|-|\.|\*|_)*(\s|\S)*(B|b)uenaventura(,|-|\.|\*|_)(\s|\S)*(V|v)alle(\s|\S)*del(\s|\S)*(C|c)auca(,|-|\.|\*|_)(\s|\S)*(C|c)olombia)/g.test(address)
+    return value
+  },
   getMeService: (token) => {
     return {
       method: _kts.method.get,
