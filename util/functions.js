@@ -16,7 +16,7 @@ module.exports = {
   getMeService: (token) => {
     return {
       method: _kts.method.get,
-      headers: {'user_token': token}
+      headers: {'USER-TOKEN': token}
     }
   },
   getInit: (data, method) => {
