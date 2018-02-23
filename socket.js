@@ -113,7 +113,10 @@ module.exports = (socket, io, Queue, Service, db) => {
               order.action = _kts.action.cancel
               order = Service.addTime(order, _kts.json.cancel)
               Service.update(order,
-                data => _fns.getBot().emit(_kts.socket.cancelSuccess, user),
+                data => {
+                  _fns.getBot().emit(_kts.socket.cancelSuccess, user)
+                  db.run(_script.delete.service, [data.info.service.id])
+                },
                 err => _fns.getBot().emit(_kts.socket.notSentPetitionCancel))
             } else {
               _fns.getBot().emit(_kts.socket.cancelDenied, user)
