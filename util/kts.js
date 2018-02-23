@@ -38,6 +38,10 @@ module.exports = {
     notFoundService: 'notFoundService',
     notFoundCabman: 'notFoundCabman',
     notSentPetition: 'notSentPetition',
+    cancelService: 'cancelService',
+    cancelSuccess: 'cancelSuccess',
+    cancelDenied: 'cancelDenied',
+    notSentPetitionCancel: 'notSentPetitionCancel',
     errorMessageQueue: 'errorMessageQueue',
     orderInProcess: 'orderInProcess',
     orderProcessing: 'orderProcessing',
@@ -55,7 +59,7 @@ module.exports = {
     aboard: 'aboard',
     end: 'end',
     cancel: 'cancel',
-    outOfCity: 'outofcity',
+    outOfCity: 'outOfcity',
     withoutCab: 'withoutCab'
   },
   json: {
