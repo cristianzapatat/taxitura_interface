@@ -15,5 +15,8 @@ module.exports = {
   select: {
     position_last_cabman: 'SELECT cabman, service, action, latitude, longitude FROM position WHERE cabman = ? ORDER BY id DESC LIMIT 1',
     service_cabman: 'SELECT service FROM service WHERE status = 0 AND cabman = ?'
+  },
+  delete: {
+    service: 'DELETE FROM service WHERE service = ?'
   }
 }
