@@ -102,6 +102,30 @@ module.exports = (socket, io, Queue, Service, db) => {
       err => _fns.getBot().emit(_kts.socket.notSentPetition, order))
   })
 
+  // Callback que permite al usuario cancelar un servicio
+  socket.on(_kts.socket.cancelService, async(user) => {
+    Service.getLastServiceUser(user.id,
+      json => {
+        if (json) {
+          if (json.length > 0) {
+            let order = json[0].info
+            if (order.action === _kts.action.order) {
+              order.action = _kts.action.cancel
+              order = Service.addTime(order, _kts.json.cancel)
+              Service.update(order,
+                data => _fns.getBot().emit(_kts.socket.cancelSuccess, user),
+                err => _fns.getBot().emit(_kts.socket.notSentPetitionCancel))
+            } else {
+              _fns.getBot().emit(_kts.socket.cancelDenied, user)
+            }
+          } else {
+            socket.emit(_kts.socket.notFoundService, {user})
+          }
+        } else _fns.getBot().emit(_kts.socket.notSentPetitionCancel)
+      },
+      err => _fns.getBot().emit(_kts.socket.notSentPetitionCancel))
+  })
+
   // Callback que procesa el servicio (acepta, modifica, finaliza)
   socket.on(_kts.socket.responseService, (order, token) => {
     validateToken(order.cabman.id, token, socket, () => {
