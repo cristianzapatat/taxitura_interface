@@ -9,6 +9,14 @@ module.exports = {
       return _global.bots[index]
     }
   },
+  getClient: (id, socket) => {
+    var sock = _global.clients[id]
+    if (sock) {
+      return sock
+    } else {
+      return socket
+    }
+  },
   inCity: (address) => {
     let value = /(.)*((,|-|\.|\*|_)*(\s|\S)*(B|b)uenaventura(,|-|\.|\*|_)(\s|\S)*(V|v)alle(\s|\S)*del(\s|\S)*(C|c)auca(,|-|\.|\*|_)(\s|\S)*(C|c)olombia)/g.test(address)
     return value

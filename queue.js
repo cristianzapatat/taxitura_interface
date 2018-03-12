@@ -19,7 +19,7 @@ async function saveService (body, Service, Queue, newTry) {
     })
 }
 
-async function addAddress (io, body, Service, Queue) {
+async function addAddress (socketClient, body, Service, Queue) {
   let order = JSON.parse(body)
   fetch(_url.getGeocoding(order.position_user))
   .then(result => {
@@ -28,7 +28,7 @@ async function addAddress (io, body, Service, Queue) {
   .then(json => {
     order = Service.addAddress(order, json.results[0].formatted_address)
     Service.update(order,
-      data => emitToSocket(io, Service, data.info),
+      data => emitToSocket(socketClient, Service, data.info),
       err => catchSend(order, Queue, err))
   })
   .catch(err => {
@@ -36,10 +36,10 @@ async function addAddress (io, body, Service, Queue) {
   })
 }
 
-async function emitToSocket (io, Service, order) {
+async function emitToSocket (socketClient, Service, order) {
   if (_fns.inCity(order.position_user.addressFull)) {
     if (Object.keys(_global.clients).length > 0) {
-      io.emit(_kts.socket.receiveService, order)
+      socketClient.emit(_kts.socket.receiveService, order)
     } else {
       order.action = _kts.action.withoutCab
       order = Service.addTime(order, _kts.json.cancel)
@@ -70,7 +70,7 @@ async function catchSend (order, Queue, err) {
   }
 }
 
-module.exports = (Queue, Service, io) => { // TODO definir el caso 'else'
+module.exports = (Queue, Service, socketClient) => { // TODO definir el caso 'else'
   Queue.subscribe(_config.saveServiceQueue, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
@@ -88,14 +88,14 @@ module.exports = (Queue, Service, io) => { // TODO definir el caso 'else'
   Queue.subscribe(_config.sendMessageQueue, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
-        addAddress(io, body, Service, Queue)
+        addAddress(socketClient, body, Service, Queue)
       }
     })
   })
   Queue.subscribe(_config.sendMessageQueueError, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
-        addAddress(io, body, Service, Queue)
+        addAddress(socketClient, body, Service, Queue)
       }
     })
   })
