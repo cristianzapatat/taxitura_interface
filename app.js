@@ -24,7 +24,18 @@ app.engine(_kts.config.hbsPoint, exphbs({extname: _kts.config.hbsPoint}))
 app.set(_kts.config.viewEngine, _kts.config.hbs)
 
 const server = require('http').Server(app)
-const io = require('socket.io')(server)
+const socketClient = require('socket.io')(server, {
+  path: '/client',
+  pingInterval: 4000,
+  pingTimeout: 1000,
+  cookie: false
+})
+const socketBot = require('socket.io')(server, {
+  path: '/bot',
+  pingInterval: 3000,
+  pingTimeout: 1000,
+  cookie: false
+})
 
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
@@ -49,10 +60,13 @@ let db = new sqlite3.Database('./db/interface.db', (err) => {
 stompit.connect({host: _config.hostQueue, port: _config.portQueue}, (err, client) => {
   if (!err) {
     Queue = new QueueClass(client)
-    io.on(_kts.socket.connection, socket => {
-      require('./socket')(socket, io, Queue, Service, db)
+    socketClient.on(_kts.socket.connection, socket => {
+      require('./socket/client')(socket, socketClient, Service, db)
     })
-    require('./queue')(Queue, Service, io)
+    socketBot.on(_kts.socket.connection, socket => {
+      require('./socket/bot')(socket, Queue, Service, db)
+    })
+    require('./queue')(Queue, Service, socketClient)
   } else { // TODO definir que hacer
     console.log(err)
   }
