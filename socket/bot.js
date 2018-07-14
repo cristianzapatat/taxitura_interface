@@ -64,7 +64,7 @@ module.exports = (socket, Queue, Service, db) => {
       err => _fns.getBot().emit(_kts.socket.notSentPetitionCancel))
   })
 
-    // callback usado para añadir una calificación a un servicio
+  // callback usado para añadir una calificación a un servicio
   socket.on(_kts.socket.quality, data => {
     Service.getId(data.service.id,
       json => {
