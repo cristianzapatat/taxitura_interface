@@ -69,7 +69,7 @@ module.exports = (socket, socketClient, Service, db) => {
   })
 
   // Callback para notificar un cambio de socket de un cliente
-  socket.on('changeSocket', id => {
+  socket.on(_kts.socket.changeSocket, id => {
     ids[socket.id] = id
     _global.clients[id] = socket
   })
@@ -100,59 +100,55 @@ module.exports = (socket, socketClient, Service, db) => {
   })
 
   // Callback que procesa el servicio (acepta, modifica, finaliza)
-  socket.on(_kts.socket.responseService, (order, token) => {
-    validateToken(order.cabman.id, token, socket, () => {
-      Service.getId(order.service.id,
-        json => {
-          let orderAux = json.info
-          if (orderAux) {
-            order.date = orderAux.date
-            if (orderAux.onMyWay) order[_kts.json.onMyWay] = orderAux.onMyWay
-            if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) { // Aceptar el servio
-              processResponseService(order, Service, socket, _kts.json.accept, true, false, db)
-            } else if (order.action === _kts.action.arrive && orderAux.action === _kts.action.accept) { // el taxita llega donde el usuario
-              processResponseService(order, Service, socket, _kts.json.arrive, false, false, db)
-            } else if (order.action === _kts.action.aboard && orderAux.action === _kts.action.arrive) { // El pasajero abordo el taxi según información del taxista
-              processResponseService(order, Service, socket, _kts.json.aboard, false, false, db)
-            } else if (order.action === _kts.action.end && orderAux.action === _kts.action.aboard) { // fin del servio
-              processResponseService(order, Service, socket, _kts.json.end, false, false, db)
-            } else {
-              _fns.getClient(order.cabman.id, socket).emit(_kts.socket.acceptService, null)
-            }
+  socket.on(_kts.socket.responseService, (order) => {
+    Service.getId(order.service.id,
+      json => {
+        let orderAux = json.info
+        if (orderAux) {
+          order.date = orderAux.date
+          if (orderAux.onMyWay) order[_kts.json.onMyWay] = orderAux.onMyWay
+          if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) { // Aceptar el servio
+            processResponseService(order, Service, socket, _kts.json.accept, true, false, db)
+          } else if (order.action === _kts.action.arrive && orderAux.action === _kts.action.accept) { // el taxita llega donde el usuario
+            processResponseService(order, Service, socket, _kts.json.arrive, false, false, db)
+          } else if (order.action === _kts.action.aboard && orderAux.action === _kts.action.arrive) { // El pasajero abordo el taxi según información del taxista
+            processResponseService(order, Service, socket, _kts.json.aboard, false, false, db)
+          } else if (order.action === _kts.action.end && orderAux.action === _kts.action.aboard) { // fin del servio
+            processResponseService(order, Service, socket, _kts.json.end, false, false, db)
           } else {
             _fns.getClient(order.cabman.id, socket).emit(_kts.socket.acceptService, null)
           }
-        },
-        err => console.log('Error responseService', err)) // TODO validar el error de consulta del servicio
-    })
+        } else {
+          _fns.getClient(order.cabman.id, socket).emit(_kts.socket.acceptService, null)
+        }
+      },
+      err => console.log('Error responseService', err))
   })
 
   // Callback para aceptar un servicio que fue previamente cancelado por el taxista
-  socket.on(_kts.socket.acceptCancel, (order, token) => {
-    validateToken(order.cabman.id, token, socket, () => {
-      Service.getId(order.service.id,
-        json => {
-          let orderAux = json.info
-          if (orderAux) {
-            if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) {
-              fetch(_url.getDistanceMatrix(order.position_cabman, order.position_user))
-                .then(response => {
-                  return response.json()
-                })
-                .then(json => {
-                  order = Service.addTimeAndDistance(order, json.rows[0].elements[0].distance.value, json.rows[0].elements[0].duration.value)
-                  processResponseService(order, Service, socket, _kts.json.accept, true, true, db)
-                })
-                .catch(err => console.log('Error 2 acceptCancel', err)) // TODO validar el error de consulta del servicio
-            } else {
-              _fns.getClient(order.cabman.id, socket).emit(_kts.socket.acceptService, null)
-            }
+  socket.on(_kts.socket.acceptCancel, (order) => {
+    Service.getId(order.service.id,
+      json => {
+        let orderAux = json.info
+        if (orderAux) {
+          if (order.action === _kts.action.accept && orderAux.action === _kts.action.order) {
+            fetch(_url.getDistanceMatrix(order.position_cabman, order.position_user))
+              .then(response => {
+                return response.json()
+              })
+              .then(json => {
+                order = Service.addTimeAndDistance(order, json.rows[0].elements[0].distance.value, json.rows[0].elements[0].duration.value)
+                processResponseService(order, Service, socket, _kts.json.accept, true, true, db)
+              })
+              .catch(err => console.log('Error 2 acceptCancel', err)) // TODO validar el error de consulta del servicio
           } else {
             _fns.getClient(order.cabman.id, socket).emit(_kts.socket.acceptService, null)
           }
-        },
-        err => console.log('Error acceptCancel', err)) // TODO validar el error de consulta del servicio
-    })
+        } else {
+          _fns.getClient(order.cabman.id, socket).emit(_kts.socket.acceptService, null)
+        }
+      },
+      err => console.log('Error acceptCancel', err))
   })
 
   // Callback para almacenar la posición del taxista
@@ -161,9 +157,7 @@ module.exports = (socket, socketClient, Service, db) => {
   })
 
   // Callback para añadir un servio a la lista de servicios cancelados de un taxista
-  socket.on(_kts.socket.addServiceCanceled, (order, token) => {
-    validateToken(order.cabman.id, token, socket, () => {
-      db.run(_script.insert.service, [order.cabman.id.toString(), order.service.id.toString()])
-    })
+  socket.on(_kts.socket.addServiceCanceled, (order) => {
+    db.run(_script.insert.service, [order.cabman.id.toString(), order.service.id.toString()])
   })
 }

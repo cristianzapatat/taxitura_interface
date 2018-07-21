@@ -50,7 +50,8 @@ module.exports = {
     errorFetch: 'errorFetch',
     sessionEnd: 'sessionEnd',
     sessionStart: 'sessionStart',
-    withoutCab: 'withoutCab'
+    withoutCab: 'withoutCab',
+    changeSocket: 'changeSocket'
   },
   action: {
     order: 'order',
