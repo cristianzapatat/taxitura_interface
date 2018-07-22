@@ -44,15 +44,28 @@ module.exports = (socket, Queue, Service, db) => {
         if (json) {
           if (json.length > 0) {
             let order = json[0].info
-            if (order.action === _kts.action.order) {
-              order.action = _kts.action.cancel
-              order = Service.addTime(order, _kts.json.cancel)
-              Service.update(order,
-                data => {
-                  _fns.getBot().emit(_kts.socket.cancelSuccess, user)
-                  db.run(_script.delete.service, [data.info.service.id])
-                },
-                err => _fns.getBot().emit(_kts.socket.notSentPetitionCancel))
+            if (order.action === _kts.action.order || order.action === _kts.action.accept || 
+              order.action === _kts.action.arrive) {
+                let sendCab = false
+                if (order.action === _kts.action.accept || order.action === _kts.action.arrive) {
+                  sendCab = true
+                }
+                order.action = _kts.action.cancel
+                order = Service.addTime(order, _kts.json.cancel)
+                Service.update(order,
+                  data => {
+                    _fns.getBot().emit(_kts.socket.cancelSuccess, user)
+                    if (sendCab) {
+                      if (order.cabman) {
+                        let sock = _fns.getClient(order.cabman.id, null)
+                        if (sock) {
+                          sock.emit(_kts.socket.cancelService, order)
+                        }
+                      }
+                    }
+                    db.run(_script.delete.service, [data.info.service.id])
+                  },
+                  err => _fns.getBot().emit(_kts.socket.notSentPetitionCancel))
             } else {
               _fns.getBot().emit(_kts.socket.cancelDenied, user)
             }
