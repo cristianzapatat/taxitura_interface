@@ -51,7 +51,9 @@ module.exports = {
     sessionEnd: 'sessionEnd',
     sessionStart: 'sessionStart',
     withoutCab: 'withoutCab',
-    changeSocket: 'changeSocket'
+    changeSocket: 'changeSocket',
+    validateServiceProcess: 'validateServiceProcess',
+    withoutServices: 'withoutServices'
   },
   action: {
     order: 'order',

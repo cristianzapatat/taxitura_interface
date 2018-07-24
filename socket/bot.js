@@ -37,6 +37,26 @@ module.exports = (socket, Queue, Service, db) => {
       err => _fns.getBot().emit(_kts.socket.notSentPetition, order))
   })
 
+  /**
+   * Función socket para validar el estado actual de un usuario con
+   * respecto a si está con un servicio activo, el cual puede estar en proceso o en curso.
+   */
+  socket.on(_kts.socket.validateServiceProcess, async (user) => {
+    Service.getLastServiceUser(user.id, json => {
+      if (json) {
+        if (json.length === 0) {
+          _fns.getBot().emit(_kts.socket.withoutServices, user)
+        } else {
+          _fns.getBot().emit(_kts.socket.orderInProcess, json[0].info)
+        }
+      } else {
+        _fns.getBot().emit(_kts.socket.notSentPetition, {user})
+      }
+    }, err => {
+      _fns.getBot.emit(_kts.socket.notSentPetition, {user})
+    })
+  })
+
   // Callback que permite al usuario cancelar un servicio
   socket.on(_kts.socket.cancelService, (user) => {
     Service.getLastServiceUser(user.id,
