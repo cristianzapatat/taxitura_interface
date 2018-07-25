@@ -5,6 +5,7 @@ const exphbs = require('express-handlebars')
 const bodyParser = require('body-parser')
 const stompit = require('stompit')
 const sqlite3 = require('sqlite3').verbose()
+var schedule = require('node-schedule')
 
 const WS = require('./ws/ws')
 const _kts = require('./util/kts')
@@ -39,6 +40,10 @@ const socketBot = require('socket.io')(server, {
 
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
+
+var j = schedule.scheduleJob('*/1 * * * *', function(fireDate){
+  console.log('This job was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
+})
 
 let db = new sqlite3.Database('./db/interface.db', (err) => {
   if (err) console.error('err connected database', err)
