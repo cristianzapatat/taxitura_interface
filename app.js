@@ -41,10 +41,6 @@ const socketBot = require('socket.io')(server, {
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
-var j = schedule.scheduleJob('*/1 * * * *', function(fireDate){
-  console.log('This job was supposed to run at ' + fireDate + ', but actually ran at ' + new Date());
-})
-
 let db = new sqlite3.Database('./db/interface.db', (err) => {
   if (err) console.error('err connected database', err)
   else {
@@ -71,7 +67,7 @@ stompit.connect({host: _config.hostQueue, port: _config.portQueue}, (err, client
     socketBot.on(_kts.socket.connection, socket => {
       require('./socket/bot')(socket, Queue, Service, db)
     })
-    require('./queue')(Queue, Service, socketClient)
+    require('./queue')(Queue, Service, socketClient, db, schedule)
   } else { // TODO definir que hacer
     console.log(err)
   }
