@@ -5,8 +5,8 @@ module.exports = {
     utf8: 'UTF-8'
   },
   time: {
-    onMyWay: __config.timeOnMyWay || 180000,
-    executionScheduleService: __config.timeExeScheduleSer || 240000
+    onMyWay: __config.timeOnMyWay,
+    executionScheduleService: __config.timeExeScheduleSer
   },
   config: {
     views: 'views',
@@ -87,6 +87,7 @@ module.exports = {
     aboard: 'aboard',
     end: 'end',
     cancel: 'cancel',
+    cancelTime: 'cancelTime',
     err: 'error'
   },
   operators: {

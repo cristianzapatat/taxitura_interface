@@ -66,26 +66,22 @@ let emitToSocket = async (socketClient, Service, order, db, schedule) => {
       let date = new Date()
       date = new Date(date.getTime() + _kts.time.executionScheduleService)
       let _id = order.user.id
-      console.log('creando la tarea')
       _global.schedules[_id] = schedule.scheduleJob(date, function (_id, fireDate) {
-        //todo eliminar la tarea del arreglog
-        let ServiceClass = require('./class/Service')
-        let _Service = new ServiceClass()
-        _Service.getLastServiceUser(_id, json => {
+        delete _global.schedules[_id]
+        Service.getLastServiceUser(_id, json => {
           if (json && json.length > 0) {
             let order = json[0].info
-            order.action = _kts.action.cancelTime
-            order = _Service.addTime(order, _kts.json.cancelTime  , fireDate)
-            _Service.update(order,
+            order.action = _kts.action.cancel
+            order = Service.addTime(order, _kts.json.cancelTime, fireDate)
+            order = Service.addTime(order, _kts.json.cancel, fireDate)
+            Service.update(order,
               data => {
-                //_fns.getBot().emit(_kts.socket.cancelTime, data.infor.user)
-                console.log('se elimina el servicio', order)
+                _fns.getBot().emit(_kts.socket.cancelTime, data.info.user)
                 db.run(_script.delete.service, [data.info.service.id])
               })
           }
         })
       }.bind(null, _id))
-      console.log(_global.schedules)
       socketClient.emit(_kts.socket.receiveService, order)
     } else {
       order.action = _kts.action.withoutCab
