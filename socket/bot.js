@@ -7,18 +7,32 @@ const _fns = require('../util/functions')
 const _url = require('../util/url')
 const _script = require('../db/script')
 
+/**
+ * Socket para la comunicación con bot (chat de Facebook)
+ * @param {*} socket, canal de comunicación
+ * @param {*} Queue, Clase de tipo Cola de servicio
+ * @param {*} Service, Clase de tipo Servicio
+ * @param {*} db, canal de comunicación a la base de datos local.
+ */
 module.exports = (socket, Queue, Service, db) => {
-  // Callback que elimina un socket de la lista cuando este se desconecta
+
+  /**
+   * Callback que elimina un socket de la lista cuando este se desconecta
+   */
   socket.on(_kts.socket.disconnect, () => {
     if (_global.bots[socket.id]) delete _global.bots[socket.id]
   })
 
-  // Callback para notificar un cambio de socket de un bot
-  socket.on('changeSocket', () => {
+  /**
+   * Callback para notificar un cambio de socket de un bot
+   */
+  socket.on(_kts.socket.changeSocket, () => {
     _global.bots[socket.id] = socket
   })
 
-  // Callback que encola los nuevos servicios que llegan por socket.
+  /**
+   *  Callback que encola los nuevos servicios que llegan por socket.
+   */
   socket.on(_kts.socket.createService, async (order) => {
     Service.getLastServiceUser(order.user.id,
       json => {
@@ -57,7 +71,9 @@ module.exports = (socket, Queue, Service, db) => {
     })
   })
 
-  // Callback que permite al usuario cancelar un servicio
+  /**
+   *  Callback que permite al usuario cancelar un servicio
+   */
   socket.on(_kts.socket.cancelService, (user) => {
     Service.getLastServiceUser(user.id,
       json => {
@@ -97,7 +113,9 @@ module.exports = (socket, Queue, Service, db) => {
       err => _fns.getBot().emit(_kts.socket.notSentPetitionCancel))
   })
 
-  // callback usado para añadir una calificación a un servicio
+  /**
+   * Callback usado para añadir una calificación a un servicio
+   */
   socket.on(_kts.socket.quality, data => {
     Service.getId(data.service.id,
       json => {
@@ -129,7 +147,9 @@ module.exports = (socket, Queue, Service, db) => {
       err => _fns.getBot().emit(_kts.socket.errorFetch, data.user))
   })
 
-  // Callback para obtener la posición del taxista por parte un usurio
+  /**
+   * Callback para obtener la posición del taxista por parte un usurio
+   */
   socket.on(_kts.socket.getPositionBot, user => {
     if (user) {
       Service.getLastServiceUser(user.id,
@@ -177,7 +197,9 @@ module.exports = (socket, Queue, Service, db) => {
     }
   })
 
-  // Callback para indicar al taxista que su usuario va en camino
+  /**
+   * Callback para indicar al taxista que su usuario va en camino
+   */
   socket.on(_kts.socket.onMyWay, data => {
     Service.getId(data.service.id,
       json => {

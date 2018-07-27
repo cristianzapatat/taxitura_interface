@@ -22,6 +22,10 @@ function processResponseService (order, Service, socket, nameDate, accept, cance
 function actionResponseService (order, socket, accept, cancel, db) {
   _fns.getBot().emit(_kts.socket.responseOrder, order)
   if (accept) {
+    if (_global.schedules[order.user.id]) {
+      _global.schedules[order.user.id].cancel()
+      delete _global.schedules[order.user.id]
+    }
     if (!cancel) {
       _fns.getClient(order.cabman.id, socket).emit(_kts.socket.acceptService, order)
     } else {

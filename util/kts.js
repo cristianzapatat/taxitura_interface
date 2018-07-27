@@ -1,9 +1,12 @@
-/*
-File that contains the constants of the project
-*/
+const __config = require('../config')
+
 module.exports = {
   conf: {
     utf8: 'UTF-8'
+  },
+  time: {
+    onMyWay: __config.timeOnMyWay,
+    executionScheduleService: __config.timeExeScheduleSer
   },
   config: {
     views: 'views',
@@ -41,6 +44,7 @@ module.exports = {
     cancelService: 'cancelService',
     cancelSuccess: 'cancelSuccess',
     cancelDenied: 'cancelDenied',
+    cancelTime: 'cancelTime',
     notSentPetitionCancel: 'notSentPetitionCancel',
     errorMessageQueue: 'errorMessageQueue',
     orderInProcess: 'orderInProcess',
@@ -62,6 +66,7 @@ module.exports = {
     aboard: 'aboard',
     end: 'end',
     cancel: 'cancel',
+    cancelTime: 'cancelTime',
     outOfCity: 'outOfcity',
     withoutCab: 'withoutCab'
   },
@@ -82,13 +87,11 @@ module.exports = {
     aboard: 'aboard',
     end: 'end',
     cancel: 'cancel',
+    cancelTime: 'cancelTime',
     err: 'error'
   },
   operators: {
     coma: ','
-  },
-  time: {
-    onMyWay: 180000
   },
   method: {
     get: 'GET',

@@ -7,7 +7,14 @@ const _url = require('./util/url')
 const _kts = require('./util/kts')
 const _fns = require('./util/functions')
 
-async function saveService (body, Service, Queue, newTry) {
+/**
+ * Función para almacenar el servicio en la base de datos
+ * @param {*} body, Información del servicio
+ * @param {class/Service} Service, Instancia de la clase Service
+ * @param {class/Queue} Queue, Instancia de la clase Queue
+ * @param {Boolean} newTry, Boolean que indica si se debe o no almacenar el servicio. 
+ */
+let saveService = async (body, Service, Queue, newTry) => {
   let order = JSON.parse(body)
   if (newTry) order = Service.create(order, _kts.json.facebook)
   Service.save(order,
@@ -19,7 +26,16 @@ async function saveService (body, Service, Queue, newTry) {
     })
 }
 
-async function addAddress (socketClient, body, Service, Queue) {
+/**
+ * Función para añadir la dirección al servicio.
+ * @param {*} socketClient, Canal de comunicación con el socket Cliente
+ * @param {*} body, Información del servicio
+ * @param {class/Service} Service, Instancia de la clase Service
+ * @param {class/Queue} Queue, Instancia de la clase Queue.
+ * @param {*} db, instancia de la base de datos local.
+ * @param {*} schedule, instancia del programador de tareas.
+ */
+let addAddress = async (socketClient, body, Service, Queue, db, schedule) => {
   let order = JSON.parse(body)
   fetch(_url.getGeocoding(order.position_user))
   .then(result => {
@@ -28,7 +44,7 @@ async function addAddress (socketClient, body, Service, Queue) {
   .then(json => {
     order = Service.addAddress(order, json.results[0].formatted_address)
     Service.update(order,
-      data => emitToSocket(socketClient, Service, data.info),
+      data => emitToSocket(socketClient, Service, data.info, db, schedule),
       err => catchSend(order, Queue, err))
   })
   .catch(err => {
@@ -36,9 +52,36 @@ async function addAddress (socketClient, body, Service, Queue) {
   })
 }
 
-async function emitToSocket (socketClient, Service, order) {
+/**
+ * Función para propagar el mensaje de un nuevo servicio a los taxista.
+ * @param {*} socketClient, Canal de comunicación con el socket Cliente
+ * @param {class/Service} Service, Instancia de la clase Service
+ * @param {*} order, Representa el servicio
+ * @param {*} db, instancia de la base de datos local.
+ * @param {*} schedule, instancia del programador de tareas.
+ */
+let emitToSocket = async (socketClient, Service, order, db, schedule) => {
   if (_fns.inCity(order.position_user.addressFull)) {
     if (Object.keys(_global.clients).length > 0) {
+      let date = new Date()
+      date = new Date(date.getTime() + _kts.time.executionScheduleService)
+      let _id = order.user.id
+      _global.schedules[_id] = schedule.scheduleJob(date, function (_id, fireDate) {
+        delete _global.schedules[_id]
+        Service.getLastServiceUser(_id, json => {
+          if (json && json.length > 0) {
+            let order = json[0].info
+            order.action = _kts.action.cancel
+            order = Service.addTime(order, _kts.json.cancelTime, fireDate)
+            order = Service.addTime(order, _kts.json.cancel, fireDate)
+            Service.update(order,
+              data => {
+                _fns.getBot().emit(_kts.socket.cancelTime, data.info.user)
+                db.run(_script.delete.service, [data.info.service.id])
+              })
+          }
+        })
+      }.bind(null, _id))
       socketClient.emit(_kts.socket.receiveService, order)
     } else {
       order.action = _kts.action.withoutCab
@@ -56,7 +99,13 @@ async function emitToSocket (socketClient, Service, order) {
   }
 }
 
-async function catchSend (order, Queue, err) {
+/**
+ * Función que se encarga de procesar un error y volver a encolar el servicio hasta un tope de veces (_config.numberTryQueue)
+ * @param {*} order, Servicio que se volverá a encolar.
+ * @param {class/Queue} Queue, Instancia de la clase Queue
+ * @param {*} err, Información del Error
+ */
+let catchSend = async (order, Queue, err) => {
   if (err) order[_kts.json.err] = err
   if (order.try) {
     order.try += 1
@@ -70,7 +119,15 @@ async function catchSend (order, Queue, err) {
   }
 }
 
-module.exports = (Queue, Service, socketClient) => { // TODO definir el caso 'else'
+/**
+ * Escuchadores que des-encolan los servicios que se ha solicitado.
+ * @param {class/Queue} Queue, instancia de la clase Queue 
+ * @param {class/Service} Service, instancia de la clase Service 
+ * @param {*} socketClient, canal de comunicación con el socket cliente.
+ * @param {*} db, instancia de la base de datos local.
+ * @param {*} schedule, instancia del programador de tareas.
+ */
+module.exports = (Queue, Service, socketClient, db, schedule) => { // TODO definir el caso 'else'
   Queue.subscribe(_config.saveServiceQueue, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
@@ -88,14 +145,14 @@ module.exports = (Queue, Service, socketClient) => { // TODO definir el caso 'el
   Queue.subscribe(_config.sendMessageQueue, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
-        addAddress(socketClient, body, Service, Queue)
+        addAddress(socketClient, body, Service, Queue, db, schedule)
       }
     })
   })
   Queue.subscribe(_config.sendMessageQueueError, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
-        addAddress(socketClient, body, Service, Queue)
+        addAddress(socketClient, body, Service, Queue, db, schedule)
       }
     })
   })
