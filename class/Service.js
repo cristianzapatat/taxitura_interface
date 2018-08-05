@@ -26,10 +26,10 @@ class Service {
         }
       })
       .then(json => {
-        resolve(json)
+        if (resolve) resolve(json)
       })
       .catch(err => {
-        fail(err)
+        if (fail) fail(err)
       })
   }
 
@@ -37,7 +37,7 @@ class Service {
     this.makeRequest(resolve, fail, _url.urlServices, _fns.getInit(order, _kts.method.post))
   }
 
-  update (order, resolve, fail) {
+  update (order, resolve = undefined, fail = undefined) {
     this.makeRequest(resolve, fail, _url.getIdService(order.service.id), _fns.getInit(order, _kts.method.put))
   }
 
@@ -45,7 +45,7 @@ class Service {
     this.makeRequest(resolve, fail, _url.getIdService(idOrder))
   }
 
-  getLastServiceUser (idUser, resolve, fail) {
+  getLastServiceUser (idUser, resolve = undefined, fail = undefined) {
     this.makeRequest(resolve, fail, _url.lastServiceUser(idUser))
   }
 
@@ -71,8 +71,8 @@ class Service {
     return order
   }
 
-  addTime (order, nameTime) {
-    order.date[nameTime] = new Date()
+  addTime (order, nameTime, date = new Date()) {
+    order.date[nameTime] = date
     return order
   }
 

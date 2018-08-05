@@ -4,3 +4,7 @@ npm-debug.log
 # Database
 db/interface.db
 db/interface.db-journal
+
+#OX
+/.vscode
+.vscode

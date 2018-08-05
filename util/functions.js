@@ -10,7 +10,10 @@ module.exports = {
     }
   },
   getClient: (id, socket) => {
-    var sock = _global.clients[id]
+    var sock = socket
+    if (id) {
+      sock = _global.clients[id]
+    }
     if (sock) {
       return sock
     } else {
