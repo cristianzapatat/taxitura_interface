@@ -66,6 +66,10 @@ let emitToSocket = async (socketClient, Service, order, db, schedule) => {
       let date = new Date()
       date = new Date(date.getTime() + _kts.time.executionScheduleService)
       let _id = order.user.id
+      if (_global.schedules[_id]) {
+        _global.schedules[_id].cancel()
+        delete _global.schedules[_id]
+      }
       _global.schedules[_id] = schedule.scheduleJob(date, function (_id, fireDate) {
         delete _global.schedules[_id]
         Service.getLastServiceUser(_id, json => {
