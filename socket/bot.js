@@ -90,6 +90,10 @@ module.exports = (socket, Queue, Service, db) => {
                 order = Service.addTime(order, _kts.json.cancel)
                 Service.update(order,
                   data => {
+                    if (_global.schedules[user.id]) {
+                      _global.schedules[user.id].cancel()
+                      delete _global.schedules[user.id]
+                    }
                     _fns.getBot().emit(_kts.socket.cancelSuccess, user)
                     if (sendCab) {
                       if (order.cabman) {
