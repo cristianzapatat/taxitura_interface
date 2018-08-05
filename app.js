@@ -5,6 +5,7 @@ const exphbs = require('express-handlebars')
 const bodyParser = require('body-parser')
 const stompit = require('stompit')
 const sqlite3 = require('sqlite3').verbose()
+var schedule = require('node-schedule')
 
 const WS = require('./ws/ws')
 const _kts = require('./util/kts')
@@ -66,7 +67,7 @@ stompit.connect({host: _config.hostQueue, port: _config.portQueue}, (err, client
     socketBot.on(_kts.socket.connection, socket => {
       require('./socket/bot')(socket, Queue, Service, db)
     })
-    require('./queue')(Queue, Service, socketClient)
+    require('./queue')(Queue, Service, socketClient, db, schedule)
   } else { // TODO definir que hacer
     console.log(err)
   }
