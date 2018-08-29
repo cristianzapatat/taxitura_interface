@@ -156,8 +156,6 @@ module.exports = (socket, socketClient, Service, db) => {
   })
 
   socket.on(_kts.socket.cancelServiceCab, (order, position) => {
-    console.log(order)
-    console.log(position)
     Service.getId(order.service.id,
       json => {
         let orderAux = json.info
@@ -168,6 +166,7 @@ module.exports = (socket, socketClient, Service, db) => {
           Service.update(orderAux,
             _json => {
               _fns.getClient(_json.info.cabman.id, socket).emit(_kts.socket.responseCancelServiceCab, _json.info)
+              _fns.getBot().emit(_kts.socket.cancelServiceCab, _json.info)
               if (position){
                 _fns.savePositionCab({
                   id: _json.info.cabman.id,
