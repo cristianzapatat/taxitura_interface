@@ -130,7 +130,14 @@ module.exports = (socket, Queue, Service, db) => {
             if (!order.quality) {
               order[_kts.json.quality] = data.quality
               Service.update(order,
-                ord => _fns.getBot().emit(_kts.socket.quality, {user: ord.info.user, message: 'Gracias por calificar el servicio'}),
+                ord => {
+                  _fns.getBot().emit(_kts.socket.quality,
+                    {user: ord.info.user, message: 'Gracias por calificar el servicio'})
+                  let sock = _fns.getClient(ord.info.cabman.id, null)
+                  if (sock) {
+                    sock.emit(_kts.socket.scoreCab, ord.info)
+                  }
+                },
                 err => _fns.getBot().emit(_kts.socket.errorFetch, data.user))
             } else {
               message = 'El servicio ya recibio una calificación previa'

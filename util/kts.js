@@ -59,7 +59,8 @@ module.exports = {
     validateServiceProcess: 'validateServiceProcess',
     withoutServices: 'withoutServices',
     cancelServiceCab: 'cancelServiceCab',
-    responseCancelServiceCab: 'responseCancelServiceCab'
+    responseCancelServiceCab: 'responseCancelServiceCab',
+    scoreCab: 'scoreCab'
   },
   action: {
     order: 'order',
