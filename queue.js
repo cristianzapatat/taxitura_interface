@@ -61,7 +61,7 @@ let addAddress = async (socketClient, body, Service, Queue, db, schedule) => {
  * @param {*} schedule, instancia del programador de tareas.
  */
 let emitToSocket = async (socketClient, Service, order, db, schedule) => {
-  if (_fns.inCity(order.position_user.addressFull)) {
+  if (_fns.inCity(order.position_user.addressFull) || _config.develop) {
     if (Object.keys(_global.clients).length > 0) {
       let date = new Date()
       date = new Date(date.getTime() + _kts.time.executionScheduleService)
@@ -70,7 +70,7 @@ let emitToSocket = async (socketClient, Service, order, db, schedule) => {
         _global.schedules[_id].cancel()
         delete _global.schedules[_id]
       }
-      _global.schedules[_id] = schedule.scheduleJob(date, function (_id, fireDate) {
+      /*_global.schedules[_id] = schedule.scheduleJob(date, function (_id, fireDate) {
         delete _global.schedules[_id]
         Service.getLastServiceUser(_id, json => {
           if (json && json.length > 0) {
@@ -85,7 +85,7 @@ let emitToSocket = async (socketClient, Service, order, db, schedule) => {
               })
           }
         })
-      }.bind(null, _id))
+      }.bind(null, _id))*/
       socketClient.emit(_kts.socket.receiveService, order)
     } else {
       order.action = _kts.action.withoutCab

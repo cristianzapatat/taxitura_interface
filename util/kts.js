@@ -57,7 +57,9 @@ module.exports = {
     withoutCab: 'withoutCab',
     changeSocket: 'changeSocket',
     validateServiceProcess: 'validateServiceProcess',
-    withoutServices: 'withoutServices'
+    withoutServices: 'withoutServices',
+    cancelServiceCab: 'cancelServiceCab',
+    responseCancelServiceCab: 'responseCancelServiceCab'
   },
   action: {
     order: 'order',
@@ -88,6 +90,7 @@ module.exports = {
     end: 'end',
     cancel: 'cancel',
     cancelTime: 'cancelTime',
+    cancelCab: 'cancelCab',
     err: 'error'
   },
   operators: {

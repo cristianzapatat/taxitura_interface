@@ -16,7 +16,7 @@ router.get('/gt', (req, res) => {
   for (let index in _global.clients) {
     ids.push(index + ' ' + _global.clients[index].id)
   }
-  let schudeles
+  let schudeles = []
   for (let index in _global.schedules) {
     schudeles.push(index)
   }
