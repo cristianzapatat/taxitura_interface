@@ -16,10 +16,15 @@ router.get('/gt', (req, res) => {
   for (let index in _global.clients) {
     ids.push(index + ' ' + _global.clients[index].id)
   }
+  let schudeles = []
+  for (let index in _global.schedules) {
+    schudeles.push(index)
+  }
   res.status(200).send({
     bots: Object.keys(_global.bots).length,
     clients: Object.keys(_global.clients).length,
-    ids
+    clientsIds: ids,
+    schedules: schudeles
   })
 })
 

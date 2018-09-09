@@ -155,6 +155,37 @@ module.exports = (socket, socketClient, Service, db) => {
       err => console.log('Error acceptCancel', err))
   })
 
+  socket.on(_kts.socket.cancelServiceCab, (order, position) => {
+    Service.getId(order.service.id,
+      json => {
+        let orderAux = json.info
+        if (orderAux) {
+          orderAux.action = _kts.action.cancel
+          orderAux = Service.addTime(orderAux, _kts.json.cancelCab)
+          orderAux = Service.addTime(orderAux, _kts.json.cancel)
+          Service.update(orderAux,
+            _json => {
+              _fns.getClient(_json.info.cabman.id, socket).emit(_kts.socket.responseCancelServiceCab, _json.info)
+              _fns.getBot().emit(_kts.socket.cancelServiceCab, _json.info)
+              if (position){
+                _fns.savePositionCab({
+                  id: _json.info.cabman.id,
+                  service: _json.info.service.id,
+                  action: _kts.json.cancelCab,
+                  position: position
+                }, db)
+              }
+            },
+            err => _fns.getClient(order.cabman.id, socket).emit(_kts.socket.responseCancelServiceCab, null)
+          )
+        } else {
+          _fns.getClient(order.cabman.id, socket).emit(_kts.socket.responseCancelServiceCab, null)
+        }
+      },
+      err => _fns.getClient(order.cabman.id, socket).emit(_kts.socket.responseCancelServiceCab, null)
+    )
+  })
+
   // Callback para almacenar la posición del taxista
   socket.on(_kts.socket.savePositionCab, data => {
     _fns.savePositionCab(data, db)
