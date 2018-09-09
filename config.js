@@ -1,6 +1,5 @@
 module.exports = {
   timeOnMyWay: process.env.TIME_WAY || 180000,
-  timeExeScheduleSer: process.env.TIME_SCHEDULE_SERVICE || 240000,
   port: process.env.PORT || 3002,
   portQueue: process.env.PORT_QUEUE || 61613,
   hostQueue: process.env.HOST_QUEUE || 'localhost',
@@ -9,5 +8,6 @@ module.exports = {
   sendMessageQueue: process.env.SEND_MESSAGE_QUEUE || 'send_message',
   sendMessageQueueError: process.env.SEND_MESSAGE_QUEUE_ERROR || 'send_message_error',
   numberTryQueue: process.env.NUMBER_TRY_QUEUE || 3,
-  urlServer: process.env.URL_SERVER || 'localhost:3000'
+  urlServer: process.env.URL_SERVER || 'localhost:3000',
+  develop: process.env.DEVELOP ? true : false || false
 }

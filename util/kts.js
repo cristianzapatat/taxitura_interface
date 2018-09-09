@@ -5,8 +5,7 @@ module.exports = {
     utf8: 'UTF-8'
   },
   time: {
-    onMyWay: __config.timeOnMyWay,
-    executionScheduleService: __config.timeExeScheduleSer
+    onMyWay: __config.timeOnMyWay
   },
   config: {
     views: 'views',
@@ -57,7 +56,11 @@ module.exports = {
     withoutCab: 'withoutCab',
     changeSocket: 'changeSocket',
     validateServiceProcess: 'validateServiceProcess',
-    withoutServices: 'withoutServices'
+    withoutServices: 'withoutServices',
+    cancelServiceCab: 'cancelServiceCab',
+    responseCancelServiceCab: 'responseCancelServiceCab',
+    scoreCab: 'scoreCab',
+    cabmancantAccept: 'cabmancantAccept'
   },
   action: {
     order: 'order',
@@ -88,6 +91,7 @@ module.exports = {
     end: 'end',
     cancel: 'cancel',
     cancelTime: 'cancelTime',
+    cancelCab: 'cancelCab',
     err: 'error'
   },
   operators: {

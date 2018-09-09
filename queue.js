@@ -6,6 +6,7 @@ const _config = require('./config')
 const _url = require('./util/url')
 const _kts = require('./util/kts')
 const _fns = require('./util/functions')
+const _script = require('./db/script')
 
 /**
  * Función para almacenar el servicio en la base de datos
@@ -33,9 +34,8 @@ let saveService = async (body, Service, Queue, newTry) => {
  * @param {class/Service} Service, Instancia de la clase Service
  * @param {class/Queue} Queue, Instancia de la clase Queue.
  * @param {*} db, instancia de la base de datos local.
- * @param {*} schedule, instancia del programador de tareas.
  */
-let addAddress = async (socketClient, body, Service, Queue, db, schedule) => {
+let addAddress = async (socketClient, body, Service, Queue, db) => {
   let order = JSON.parse(body)
   fetch(_url.getGeocoding(order.position_user))
   .then(result => {
@@ -44,7 +44,7 @@ let addAddress = async (socketClient, body, Service, Queue, db, schedule) => {
   .then(json => {
     order = Service.addAddress(order, json.results[0].formatted_address)
     Service.update(order,
-      data => emitToSocket(socketClient, Service, data.info, db, schedule),
+      data => emitToSocket(socketClient, Service, data.info, db),
       err => catchSend(order, Queue, err))
   })
   .catch(err => {
@@ -58,34 +58,14 @@ let addAddress = async (socketClient, body, Service, Queue, db, schedule) => {
  * @param {class/Service} Service, Instancia de la clase Service
  * @param {*} order, Representa el servicio
  * @param {*} db, instancia de la base de datos local.
- * @param {*} schedule, instancia del programador de tareas.
  */
-let emitToSocket = async (socketClient, Service, order, db, schedule) => {
-  if (_fns.inCity(order.position_user.addressFull)) {
+let emitToSocket = async (socketClient, Service, order, db) => {
+  if (_fns.inCity(order.position_user.addressFull) || _config.develop) {
     if (Object.keys(_global.clients).length > 0) {
-      let date = new Date()
-      date = new Date(date.getTime() + _kts.time.executionScheduleService)
-      let _id = order.user.id
-      if (_global.schedules[_id]) {
-        _global.schedules[_id].cancel()
-        delete _global.schedules[_id]
+      db.run(_script.delete.orderByUser, [order.user.id])
+      for (index in _global.clients) {
+        db.run(_script.insert.order, [order.user.id, index, order.service.id])
       }
-      _global.schedules[_id] = schedule.scheduleJob(date, function (_id, fireDate) {
-        delete _global.schedules[_id]
-        Service.getLastServiceUser(_id, json => {
-          if (json && json.length > 0) {
-            let order = json[0].info
-            order.action = _kts.action.cancel
-            order = Service.addTime(order, _kts.json.cancelTime, fireDate)
-            order = Service.addTime(order, _kts.json.cancel, fireDate)
-            Service.update(order,
-              data => {
-                _fns.getBot().emit(_kts.socket.cancelTime, data.info.user)
-                db.run(_script.delete.service, [data.info.service.id])
-              })
-          }
-        })
-      }.bind(null, _id))
       socketClient.emit(_kts.socket.receiveService, order)
     } else {
       order.action = _kts.action.withoutCab
@@ -129,9 +109,8 @@ let catchSend = async (order, Queue, err) => {
  * @param {class/Service} Service, instancia de la clase Service 
  * @param {*} socketClient, canal de comunicación con el socket cliente.
  * @param {*} db, instancia de la base de datos local.
- * @param {*} schedule, instancia del programador de tareas.
  */
-module.exports = (Queue, Service, socketClient, db, schedule) => { // TODO definir el caso 'else'
+module.exports = (Queue, Service, socketClient, db) => { // TODO definir el caso 'else'
   Queue.subscribe(_config.saveServiceQueue, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
@@ -149,14 +128,14 @@ module.exports = (Queue, Service, socketClient, db, schedule) => { // TODO defin
   Queue.subscribe(_config.sendMessageQueue, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
-        addAddress(socketClient, body, Service, Queue, db, schedule)
+        addAddress(socketClient, body, Service, Queue, db)
       }
     })
   })
   Queue.subscribe(_config.sendMessageQueueError, (msg) => {
     msg.readString(_kts.conf.utf8, (err, body) => {
       if (!err) {
-        addAddress(socketClient, body, Service, Queue, db, schedule)
+        addAddress(socketClient, body, Service, Queue, db)
       }
     })
   })
