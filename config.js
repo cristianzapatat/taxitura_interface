@@ -1,6 +1,5 @@
 module.exports = {
   timeOnMyWay: process.env.TIME_WAY || 180000,
-  timeExeScheduleSer: process.env.TIME_SCHEDULE_SERVICE || 45000,
   port: process.env.PORT || 3002,
   portQueue: process.env.PORT_QUEUE || 61613,
   hostQueue: process.env.HOST_QUEUE || 'localhost',

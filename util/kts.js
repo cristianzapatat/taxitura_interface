@@ -5,8 +5,7 @@ module.exports = {
     utf8: 'UTF-8'
   },
   time: {
-    onMyWay: __config.timeOnMyWay,
-    executionScheduleService: __config.timeExeScheduleSer
+    onMyWay: __config.timeOnMyWay
   },
   config: {
     views: 'views',
@@ -60,7 +59,8 @@ module.exports = {
     withoutServices: 'withoutServices',
     cancelServiceCab: 'cancelServiceCab',
     responseCancelServiceCab: 'responseCancelServiceCab',
-    scoreCab: 'scoreCab'
+    scoreCab: 'scoreCab',
+    cabmancantAccept: 'cabmancantAccept'
   },
   action: {
     order: 'order',

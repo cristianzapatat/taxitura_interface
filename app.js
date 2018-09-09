@@ -5,7 +5,6 @@ const exphbs = require('express-handlebars')
 const bodyParser = require('body-parser')
 const stompit = require('stompit')
 const sqlite3 = require('sqlite3').verbose()
-var schedule = require('node-schedule')
 
 const WS = require('./ws/ws')
 const _kts = require('./util/kts')
@@ -54,6 +53,10 @@ let db = new sqlite3.Database('./db/interface.db', (err) => {
         if (err) console.error('err table service', err)
         else console.log(`Table service_cancel created`)
       })
+      db.run(_script.create.table.orders, (err) => {
+        if (err) console.error('err table service', err)
+        else console.log(`Table orders created`)
+      })
     })
   }
 })
@@ -67,7 +70,7 @@ stompit.connect({host: _config.hostQueue, port: _config.portQueue}, (err, client
     socketBot.on(_kts.socket.connection, socket => {
       require('./socket/bot')(socket, Queue, Service, db)
     })
-    require('./queue')(Queue, Service, socketClient, db, schedule)
+    require('./queue')(Queue, Service, socketClient, db)
   } else { // TODO definir que hacer
     console.log(err)
   }
