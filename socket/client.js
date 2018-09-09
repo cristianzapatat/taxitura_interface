@@ -22,10 +22,7 @@ function processResponseService (order, Service, socket, nameDate, accept, cance
 function actionResponseService (order, socket, accept, cancel, db) {
   _fns.getBot().emit(_kts.socket.responseOrder, order)
   if (accept) {
-    if (_global.schedules[order.user.id]) {
-      _global.schedules[order.user.id].cancel()
-      delete _global.schedules[order.user.id]
-    }
+    db.run(_script.delete.orderByService, [order.service.id])
     if (!cancel) {
       _fns.getClient(order.cabman.id, socket).emit(_kts.socket.acceptService, order)
     } else {
@@ -67,6 +64,7 @@ module.exports = (socket, socketClient, Service, db) => {
     let id
     if (ids[socket.id]) id = ids[socket.id]
     if (_global.clients[id]) {
+      _fns.deleteServiceByCabman(id, db, Service)
       delete _global.clients[id]
       delete ids[socket.id]
     }
@@ -194,5 +192,14 @@ module.exports = (socket, socketClient, Service, db) => {
   // Callback para añadir un servio a la lista de servicios cancelados de un taxista
   socket.on(_kts.socket.addServiceCanceled, (order) => {
     db.run(_script.insert.service, [order.cabman.id.toString(), order.service.id.toString()])
+    _fns.deleteServiceByCabman(order.cabman.id, db, Service)
+  })
+
+  /**
+   * Socket para indicar que el taxiasta no puede aceptar el servicio y este se descuente
+   * de la base de datos.
+   */
+  socket.on(_kts.socket.cabmancantAccept, idCabmam => {
+    _fns.deleteServiceByCabman(idCabmam, db, Service)
   })
 }
