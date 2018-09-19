@@ -11,9 +11,7 @@ module.exports = {
   getDistanceMatrix: (start, end) => {
     let startLoc = `${start.latitude},${start.longitude}`
     let endLoc = `${end.latitude},${end.longitude}`
-    return `https://maps.googleapis.com/maps/api/distancematrix/json?
-      units=imperial&origins=${startLoc}&destinations=${endLoc}&
-      key=${keyDistanceMatrix}&units=metric`
+    return `https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${startLoc}&destinations=${endLoc}&key=${keyDistanceMatrix}&units=metric`
   },
   getGeocoding: (pos) => `https://maps.google.com/maps/api/geocode/json?key=${keyGeocoding}&latlng=${encodeURI(`${pos.latitude},${pos.longitude}`)}`,
   urlServices,
