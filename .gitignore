@@ -1,10 +1,23 @@
+# Node modules
 node_modules
 npm-debug.log
+package-lock.json
 
-# Database
-db/interface.db
-db/interface.db-journal
+# Adonis directory for storing tmp files
+tmp
+
+# Environment variables, never commit this file
+.env
+
+# The development sqlite file
+database/development.sqlite
 
 #OX
 /.vscode
 .vscode
+
+#Firebase
+taxitura-firebase.json
+
+#Editor
+.editorconfig

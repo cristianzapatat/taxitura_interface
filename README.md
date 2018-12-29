@@ -1,10 +1,31 @@
-# taxitura_interface
+# Adonis fullstack application
 
-## Ejecución
-Para ejecutar
-* *para producción* => **npm start**
+This is the fullstack boilerplate for AdonisJs, it comes pre-configured with.
 
-Para ejecutar con nodemon
-* **npm run dev**
+1. Bodyparser
+2. Session
+3. Authentication
+4. Web security middleware
+5. CORS
+6. Edge template engine
+7. Lucid ORM
+8. Migrations and seeds
 
-Web Page: **[taxitura.com](http://www.taxitura.com/)**
+## Setup
+
+Use the adonis command to install the blueprint
+
+```bash
+adonis new yardstick
+```
+
+or manually clone the repo and then run `npm install`.
+
+
+### Migrations
+
+Run the following command to run startup migrations.
+
+```js
+adonis migration:run
+```
